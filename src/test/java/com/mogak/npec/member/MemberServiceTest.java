@@ -1,19 +1,20 @@
 package com.mogak.npec.member;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.mogak.npec.member.application.MemberService;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;
 import com.mogak.npec.member.exception.MemberAlreadySavedException;
 import com.mogak.npec.member.repository.MemberRepository;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class MemberServiceTest {
