@@ -26,6 +26,6 @@ public class MemberService {
         Encryptor encryptor = new EncryptorImpl();
         String encryptPassword = encryptor.encrypt(request.getPassword());
 
-        memberRepository.save(new Member(request.getEmail(), request.getNickname(), encryptPassword));
+        memberRepository.save(new Member(request.getNickname(), request.getEmail(), encryptPassword));
     }
 }
