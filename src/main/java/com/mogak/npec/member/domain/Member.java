@@ -1,7 +1,6 @@
 package com.mogak.npec.member.domain;
 
 import com.mogak.npec.common.BaseEntity;
-import com.mogak.npec.member.dto.MemberCreateRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,12 +27,9 @@ public class Member extends BaseEntity {
 
     private boolean isOut;
 
-    public Member() {
-    }
-
-    public Member(MemberCreateRequest request) {
-        this.nickname = request.getNickname();
-        this.email = request.getEmail();
-        this.password = request.getPassword();
+    public Member(String nickname, String email, String password) {
+        this.nickname = nickname;
+        this.email = email;
+        this.password = password;
     }
 }

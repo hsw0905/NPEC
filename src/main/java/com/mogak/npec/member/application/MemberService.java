@@ -1,5 +1,7 @@
 package com.mogak.npec.member.application;
 
+import com.mogak.npec.auth.Encryptor;
+import com.mogak.npec.auth.EncryptorImpl;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;
 import com.mogak.npec.member.exception.MemberAlreadySavedException;
@@ -21,7 +23,9 @@ public class MemberService {
             throw new MemberAlreadySavedException(HttpStatus.BAD_REQUEST.toString(),
                     "이미 등록된 이메일입니다.");
         }
+        Encryptor encryptor = new EncryptorImpl();
+        String encryptPassword = encryptor.encrypt(request.getPassword());
 
-        memberRepository.save(new Member(request));
+        memberRepository.save(new Member(request.getEmail(), request.getNickname(), encryptPassword));
     }
 }
