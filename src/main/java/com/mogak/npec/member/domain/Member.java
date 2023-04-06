@@ -1,6 +1,7 @@
-package com.mogak.npec.member;
+package com.mogak.npec.member.domain;
 
 import com.mogak.npec.common.BaseEntity;
+import com.mogak.npec.member.dto.MemberCreateRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
