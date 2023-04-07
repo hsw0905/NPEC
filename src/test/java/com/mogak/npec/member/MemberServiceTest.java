@@ -1,5 +1,7 @@
 package com.mogak.npec.member;
 
+import com.mogak.npec.auth.Encryptor;
+import com.mogak.npec.auth.EncryptorImpl;
 import com.mogak.npec.member.application.MemberService;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;
@@ -40,9 +42,11 @@ class MemberServiceTest {
 
         // when
         memberService.createMember(request);
+        Encryptor encryptor = new EncryptorImpl();
+        String encryptPassword = encryptor.encrypt(request.getPassword());
 
         // then
-        Optional<Member> member = memberRepository.findByEmailAndPassword(testEmail, testPassword);
+        Optional<Member> member = memberRepository.findByEmailAndPassword(testEmail, encryptPassword);
         assertThat(member.isPresent()).isTrue();
     }
 

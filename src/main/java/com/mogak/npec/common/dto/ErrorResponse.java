@@ -7,11 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ErrorResponse {
-    private String errorCode;
     private String message;
 
-    public ErrorResponse(String errorCode, String message) {
-        this.errorCode = errorCode;
+    public ErrorResponse(String message) {
         this.message = message;
     }
 }

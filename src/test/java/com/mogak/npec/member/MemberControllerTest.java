@@ -31,7 +31,7 @@ public class MemberControllerTest {
                 .body(new MemberCreateRequest(testEmail, "test", testPassword))
                 .post("/members")
                 .then()
+                .log().all()
                 .statusCode(HttpStatus.BAD_REQUEST.value());
-
     }
 }
