@@ -6,24 +6,23 @@ import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;
 import com.mogak.npec.member.exception.MemberAlreadySavedException;
 import com.mogak.npec.member.repository.MemberRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final Encryptor encryptor;
 
-    public MemberService(MemberRepository memberRepository) {
+    public MemberService(MemberRepository memberRepository, Encryptor encryptor) {
         this.memberRepository = memberRepository;
+        this.encryptor = encryptor;
     }
 
     public void createMember(MemberCreateRequest request) {
         if (memberRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new MemberAlreadySavedException("이미 등록된 이메일입니다.");
         }
-        Encryptor encryptor = new EncryptorImpl(); // <-- 빈으로 만들면 어떨까
         String encryptPassword = encryptor.encrypt(request.getPassword());
 
         memberRepository.save(new Member(request.getNickname(), request.getEmail(), encryptPassword));

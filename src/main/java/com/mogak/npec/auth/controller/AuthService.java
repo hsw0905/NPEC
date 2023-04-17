@@ -34,7 +34,7 @@ public class AuthService {
         return tokenProvider.createAccessToken(memberId);
     }
 
-    public String createRefreshToken() {
-        return tokenProvider.createRefreshToken();
+    public String createRefreshToken(Long memberId) {
+        return tokenProvider.createRefreshToken(memberId);
     }
 }
