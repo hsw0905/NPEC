@@ -2,6 +2,7 @@ package com.mogak.npec.auth.controller;
 
 import com.mogak.npec.auth.EncryptorImpl;
 import com.mogak.npec.auth.dto.LoginRequest;
+import com.mogak.npec.auth.dto.LoginTokenResponse;
 import com.mogak.npec.auth.exception.LoginFailException;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
@@ -34,10 +35,11 @@ class AuthServiceTest {
         memberRepository.save(new Member("a", email, new EncryptorImpl().encrypt("1234")));
 
         // when
-        Long memberId = authService.login(new LoginRequest(email, "1234"));
+        LoginTokenResponse response = authService.login(new LoginRequest(email, "1234"));
 
         // then
-        assertThat(memberId).isNotNull();
+        assertThat(response.getAccessToken()).isNotNull();
+        assertThat(response.getRefreshToken()).isNotNull();
     }
 
     @DisplayName("유효하지 않은 이메일과 비밀번호로 요청한 경우 예외를 던진다.")
