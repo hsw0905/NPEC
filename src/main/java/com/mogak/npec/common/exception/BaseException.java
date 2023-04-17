@@ -10,7 +10,4 @@ public class BaseException extends RuntimeException {
         super(message);
     }
 
-    public ErrorResponse toResponse() {
-        return new ErrorResponse(getMessage());
-    }
 }

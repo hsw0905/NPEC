@@ -23,7 +23,7 @@ public class MemberService {
         if (memberRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new MemberAlreadySavedException("이미 등록된 이메일입니다.");
         }
-        Encryptor encryptor = new EncryptorImpl();
+        Encryptor encryptor = new EncryptorImpl(); // <-- 빈으로 만들면 어떨까
         String encryptPassword = encryptor.encrypt(request.getPassword());
 
         memberRepository.save(new Member(request.getNickname(), request.getEmail(), encryptPassword));
