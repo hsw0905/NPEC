@@ -1,17 +1,17 @@
-package com.mogak.npec.auth.application;
+package com.mogak.npec.auth.controller;
 
-import com.mogak.npec.auth.controller.AuthService;
+import com.mogak.npec.auth.application.AuthService;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/login")
 public class AuthController {
     private final AuthService authService;
 
@@ -19,10 +19,17 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<LoginTokenResponse> login(@RequestBody LoginRequest request) {
         LoginTokenResponse response = authService.login(request);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader String accessToken, @RequestHeader String refreshToken) {
+        // todo argument resolver 유효성 검사하기
+        authService.logout(accessToken, refreshToken);
+        return ResponseEntity.ok().build();
     }
 }
