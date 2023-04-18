@@ -3,8 +3,8 @@ package com.mogak.npec.auth.domain;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -62,5 +62,18 @@ public class TokenProvider {
             return ex.getClaims().get("memberId", Long.class);
         }
         return claims.get("memberId", Long.class);
+    }
+
+    public boolean isValid(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException | MalformedJwtException exception) {
+            return false;
+        }
+        return true;
     }
 }

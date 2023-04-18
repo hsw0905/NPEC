@@ -1,12 +1,14 @@
 package com.mogak.npec.auth.application;
 
-import com.mogak.npec.auth.repository.BlackListRepository;
-import com.mogak.npec.auth.domain.EncryptorImpl;
-import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.domain.BlackList;
+import com.mogak.npec.auth.domain.EncryptorImpl;
+import com.mogak.npec.auth.domain.TokenExtractor;
+import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;
+import com.mogak.npec.auth.exception.InvalidTokenException;
 import com.mogak.npec.auth.exception.LoginFailException;
+import com.mogak.npec.auth.repository.BlackListRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,13 +27,15 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final EncryptorImpl encryptor;
     private final BlackListRepository blackListRepository;
+    private final TokenExtractor tokenExtractor;
 
 
-    public AuthService(MemberRepository memberRepository, TokenProvider tokenProvider, EncryptorImpl encryptor, BlackListRepository blackListRepository) {
+    public AuthService(MemberRepository memberRepository, TokenProvider tokenProvider, EncryptorImpl encryptor, BlackListRepository blackListRepository, TokenExtractor tokenExtractor) {
         this.memberRepository = memberRepository;
         this.tokenProvider = tokenProvider;
         this.encryptor = encryptor;
         this.blackListRepository = blackListRepository;
+        this.tokenExtractor = tokenExtractor;
     }
 
 
@@ -46,10 +50,20 @@ public class AuthService {
     }
 
     public void logout(String accessToken, String refreshToken) {
-        blackListRepository.saveAll(List.of(
-                new BlackList(accessToken, Long.parseLong(accessTokenExpire)),
-                new BlackList(refreshToken, Long.parseLong(refreshTokenExpire)))
-        );
+        String extractedAccessToken = tokenExtractor.extractToken(accessToken);
+        String extractedRefreshToken = tokenExtractor.extractToken(refreshToken);
+
+        boolean isValidAccessToken = tokenProvider.isValid(extractedAccessToken);
+        boolean isValidRefreshToken = tokenProvider.isValid(extractedRefreshToken);
+
+        if (isValidAccessToken && isValidRefreshToken) {
+            blackListRepository.saveAll(List.of(
+                    new BlackList(extractedAccessToken, Long.parseLong(accessTokenExpire)),
+                    new BlackList(extractedRefreshToken, Long.parseLong(refreshTokenExpire)))
+            );
+        } else {
+            throw new InvalidTokenException("유효한 토큰이 아닙니다.");
+        }
     }
 
     private Member findMember(LoginRequest request) {
