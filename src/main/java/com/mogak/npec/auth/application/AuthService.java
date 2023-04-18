@@ -6,6 +6,7 @@ import com.mogak.npec.auth.domain.TokenExtractor;
 import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;
+import com.mogak.npec.auth.dto.RefreshResponse;
 import com.mogak.npec.auth.exception.InvalidTokenException;
 import com.mogak.npec.auth.exception.LoginFailException;
 import com.mogak.npec.auth.repository.BlackListRepository;
@@ -79,5 +80,17 @@ public class AuthService {
 
     private String createRefreshToken(Long memberId) {
         return tokenProvider.createRefreshToken(memberId);
+    }
+
+    public RefreshResponse refresh(String header) {
+        String oldRefreshToken = tokenExtractor.extractToken(header);
+        Long memberId = tokenProvider.getParsedClaims(oldRefreshToken);
+
+        String newAccessToken = createAccessToken(memberId);
+        String newRefreshToken = createRefreshToken(memberId);
+
+        blackListRepository.save(new BlackList(oldRefreshToken, Long.parseLong(refreshTokenExpire)));
+
+        return new RefreshResponse(newAccessToken, newRefreshToken);
     }
 }

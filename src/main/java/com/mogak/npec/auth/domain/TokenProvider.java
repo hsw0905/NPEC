@@ -1,6 +1,7 @@
 package com.mogak.npec.auth.domain;
 
 
+import com.mogak.npec.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -58,10 +59,10 @@ public class TokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+            return claims.get("memberId", Long.class);
         } catch (ExpiredJwtException ex) {
-            return ex.getClaims().get("memberId", Long.class);
+            throw new InvalidTokenException("만료기간이 지난 토큰입니다.");
         }
-        return claims.get("memberId", Long.class);
     }
 
     public boolean isValid(String token) {
@@ -71,9 +72,9 @@ public class TokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+            return true;
         } catch (ExpiredJwtException | MalformedJwtException exception) {
             return false;
         }
-        return true;
     }
 }
