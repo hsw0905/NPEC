@@ -1,10 +1,12 @@
-package com.mogak.npec.auth.controller;
+package com.mogak.npec.auth.application;
 
 import com.mogak.npec.auth.domain.EncryptorImpl;
 import com.mogak.npec.auth.application.AuthService;
+import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;
 import com.mogak.npec.auth.exception.LoginFailException;
+import com.mogak.npec.auth.repository.BlackListRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -19,13 +21,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 class AuthServiceTest {
     @Autowired
+    private TokenProvider tokenProvider;
+    @Autowired
     private AuthService authService;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private BlackListRepository blackListRepository;
 
     @AfterEach
     void tearDown() {
         memberRepository.deleteAll();
+        blackListRepository.deleteAll();
     }
 
     @DisplayName("저장된 이메일과 비밀번호로 요청한 경우 멤버 id 를 리턴한다.")
@@ -54,5 +61,18 @@ class AuthServiceTest {
         assertThatThrownBy(
                 () -> authService.login(new LoginRequest(email, "11"))
         ).isExactlyInstanceOf(LoginFailException.class);
+    }
+
+    @DisplayName("유효한 토큰으로 로그아웃 요청 시 성공")
+    @Test
+    void logoutSuccess() {
+        // given
+        String tokenPrefix = "Bearer ";
+        String accessToken = tokenProvider.createAccessToken(1L);
+        String refreshToken = tokenProvider.createRefreshToken(1L);
+
+        // when
+        authService.logout(tokenPrefix + accessToken, tokenPrefix + refreshToken);
+
     }
 }

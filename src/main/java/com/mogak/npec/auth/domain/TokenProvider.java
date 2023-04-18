@@ -7,6 +7,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -62,6 +63,10 @@ public class TokenProvider {
             return claims.get("memberId", Long.class);
         } catch (ExpiredJwtException ex) {
             throw new InvalidTokenException("만료기간이 지난 토큰입니다.");
+        } catch (SignatureException ex) {
+            throw new InvalidTokenException("믿을 수 없는 토큰입니다.");
+        } catch (MalformedJwtException ex) {
+            throw new InvalidTokenException("올바른 토큰 형태가 아닙니다.");
         }
     }
 
@@ -73,7 +78,7 @@ public class TokenProvider {
                     .parseClaimsJws(token)
                     .getBody();
             return true;
-        } catch (ExpiredJwtException | MalformedJwtException exception) {
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException exception) {
             return false;
         }
     }
