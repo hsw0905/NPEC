@@ -1,4 +1,4 @@
-package com.mogak.npec.auth;
+package com.mogak.npec.auth.domain;
 
 import org.springframework.stereotype.Component;
 

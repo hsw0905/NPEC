@@ -1,6 +1,6 @@
 package com.mogak.npec.auth.controller;
 
-import com.mogak.npec.auth.EncryptorImpl;
+import com.mogak.npec.auth.domain.EncryptorImpl;
 import com.mogak.npec.auth.application.AuthService;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;

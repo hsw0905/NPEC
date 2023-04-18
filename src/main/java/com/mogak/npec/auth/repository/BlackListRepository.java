@@ -1,4 +1,4 @@
-package com.mogak.npec.auth;
+package com.mogak.npec.auth.repository;
 
 import com.mogak.npec.auth.domain.BlackList;
 import org.springframework.data.jpa.repository.JpaRepository;

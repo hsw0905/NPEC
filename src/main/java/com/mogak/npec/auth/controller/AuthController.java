@@ -1,8 +1,10 @@
 package com.mogak.npec.auth.controller;
 
+import com.mogak.npec.auth.ValidToken;
 import com.mogak.npec.auth.application.AuthService;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +29,7 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader String accessToken, @RequestHeader String refreshToken) {
-        // todo argument resolver 유효성 검사하기
+    public ResponseEntity<Void> logout(@ValidToken String accessToken, @ValidToken String refreshToken) {
         authService.logout(accessToken, refreshToken);
         return ResponseEntity.ok().build();
     }

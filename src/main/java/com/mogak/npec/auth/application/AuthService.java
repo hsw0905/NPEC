@@ -1,8 +1,8 @@
 package com.mogak.npec.auth.application;
 
-import com.mogak.npec.auth.BlackListRepository;
-import com.mogak.npec.auth.EncryptorImpl;
-import com.mogak.npec.auth.TokenProvider;
+import com.mogak.npec.auth.repository.BlackListRepository;
+import com.mogak.npec.auth.domain.EncryptorImpl;
+import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.domain.BlackList;
 import com.mogak.npec.auth.dto.LoginRequest;
 import com.mogak.npec.auth.dto.LoginTokenResponse;

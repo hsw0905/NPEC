@@ -1,7 +1,7 @@
 package com.mogak.npec.member;
 
-import com.mogak.npec.auth.Encryptor;
-import com.mogak.npec.auth.EncryptorImpl;
+import com.mogak.npec.auth.domain.Encryptor;
+import com.mogak.npec.auth.domain.EncryptorImpl;
 import com.mogak.npec.member.application.MemberService;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;

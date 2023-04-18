@@ -1,6 +1,9 @@
-package com.mogak.npec.auth;
+package com.mogak.npec.auth.domain;
 
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,5 +48,19 @@ public class TokenProvider {
                 .setExpiration(expireDate)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public Long getParsedClaims(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims().get("memberId", Long.class);
+        }
+        return claims.get("memberId", Long.class);
     }
 }
