@@ -4,6 +4,7 @@ import com.mogak.npec.member.dto.MemberCreateRequest;
 import com.mogak.npec.member.application.MemberService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +22,9 @@ public class MemberController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void createMember(@RequestBody @Valid MemberCreateRequest request) {
+    public ResponseEntity<Void> createMember(@RequestBody @Valid MemberCreateRequest request) {
         memberService.createMember(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
