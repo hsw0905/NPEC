@@ -64,9 +64,24 @@ public class AuthService {
                     new BlackList(extractedAccessToken, accessTokenExpire),
                     new BlackList(extractedRefreshToken, refreshTokenExpire))
             );
+        } else if (isValidRefreshToken) {
+            blackListRepository.save(new BlackList(extractedRefreshToken, refreshTokenExpire));
+
         } else {
             throw new InvalidTokenException("유효한 토큰이 아닙니다.");
         }
+    }
+
+    public RefreshResponse refresh(String header) {
+        String refreshToken = tokenExtractor.extractToken(header);
+        blackListRepository.findById(refreshToken).ifPresent(blackList -> {
+            throw new InvalidTokenException("유효하지 않은 refresh token 입니다.");
+        });
+
+        Long memberId = tokenProvider.getParsedClaims(refreshToken);
+        String newAccessToken = createAccessToken(memberId);
+
+        return new RefreshResponse(newAccessToken);
     }
 
     private Member findMember(LoginRequest request) {
@@ -84,15 +99,4 @@ public class AuthService {
         return tokenProvider.createRefreshToken(memberId);
     }
 
-    public RefreshResponse refresh(String header) {
-        String oldRefreshToken = tokenExtractor.extractToken(header);
-        Long memberId = tokenProvider.getParsedClaims(oldRefreshToken);
-
-        String newAccessToken = createAccessToken(memberId);
-        String newRefreshToken = createRefreshToken(memberId);
-
-        blackListRepository.save(new BlackList(oldRefreshToken, refreshTokenExpire));
-
-        return new RefreshResponse(newAccessToken, newRefreshToken);
-    }
 }

@@ -1,5 +1,6 @@
 package com.mogak.npec.auth.application;
 
+import com.mogak.npec.auth.domain.BlackList;
 import com.mogak.npec.auth.domain.EncryptorImpl;
 import com.mogak.npec.auth.domain.TokenProvider;
 import com.mogak.npec.auth.dto.LoginRequest;
@@ -81,13 +82,25 @@ class AuthServiceTest {
         assertThat(blackListRepository.findAll().size()).isEqualTo(2);
     }
 
-    @DisplayName("만료된 토큰으로 로그아웃 요청시 예외를 던진다")
+    @DisplayName("만료된 access 토큰과 유효한 refresh 토큰으로 로그아웃 요청시 성공")
     @Test
-    void logoutFailWithExpiredToken() {
+    void logoutSuccessWithExpiredToken() {
+        // given
         String refreshToken = tokenProvider.createRefreshToken(1L);
 
+        // when
+        authService.logout(EXPIRED_TOKEN, TOKEN_PREFIX + refreshToken);
+
+        // then
+        assertThat(blackListRepository.findAll().size()).isEqualTo(1);
+        assertThat(blackListRepository.findById(refreshToken)).isNotEmpty();
+    }
+
+    @DisplayName("만료된 access, refresh 토큰으로 로그아웃 요청시 예외를 던진다.")
+    @Test
+    void logoutFailWithExpiredTokens() {
         assertThatThrownBy(
-                () -> authService.logout(EXPIRED_TOKEN, TOKEN_PREFIX + refreshToken)
+                () -> authService.logout(EXPIRED_TOKEN, EXPIRED_TOKEN)
         ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 
@@ -101,7 +114,25 @@ class AuthServiceTest {
 
         // then
         assertThat(response.getAccessToken()).isNotEmpty();
-        assertThat(response.getRefreshToken()).isNotEmpty();
-        assertThat(blackListRepository.findById(refreshToken)).isNotEmpty();
+    }
+
+    @DisplayName("만료된 토큰으로 요청한 경우 예외를 던진다.")
+    @Test
+    void refreshFailWithExpiredToken() {
+        assertThatThrownBy(
+                () -> authService.refresh(EXPIRED_TOKEN)
+        ).isExactlyInstanceOf(InvalidTokenException.class);
+    }
+
+    @DisplayName("블랙리스트에 저장된 토큰인 경우 예외를 던진다.")
+    @Test
+    void refreshFailWithBlacklistToken() {
+        // given
+        String refreshToken = tokenProvider.createRefreshToken(1L);
+        blackListRepository.save(new BlackList(refreshToken, 20L));
+
+        assertThatThrownBy(
+                () -> authService.refresh(TOKEN_PREFIX + refreshToken)
+        ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 }
