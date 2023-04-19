@@ -17,12 +17,9 @@ import java.io.InputStreamReader;
 public class EmbeddedRedisConfig {
     private RedisServer redisServer;
 
-    @Value("${spring.cache.redis.port}")
+    @Value("${redis.port}")
     private int redisPort;
 
-    //    public EmbeddedRedisConfig(@Value("${spring.cache.redis.port}") int port) {
-//        this.redisServer = new RedisServer(port);
-//    }
     @PostConstruct
     public void redisServer() throws IOException {
         int port = isRedisRunning() ? findAvailablePort() : redisPort;

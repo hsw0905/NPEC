@@ -19,10 +19,9 @@ import java.util.List;
 
 @Service
 public class AuthService {
-    @Value("${spring.cache.ttl.access}")
-    String accessTokenExpire;
-    @Value("${spring.cache.ttl.refresh}")
-    String refreshTokenExpire;
+
+    private final Long accessTokenExpire;
+    private final Long refreshTokenExpire;
 
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
@@ -31,7 +30,10 @@ public class AuthService {
     private final TokenExtractor tokenExtractor;
 
 
-    public AuthService(MemberRepository memberRepository, TokenProvider tokenProvider, EncryptorImpl encryptor, BlackListRepository blackListRepository, TokenExtractor tokenExtractor) {
+    public AuthService(@Value("${redis.ttl.access}") Long accessTokenExpire, @Value("${redis.ttl.refresh}") Long refreshTokenExpire,
+                       MemberRepository memberRepository, TokenProvider tokenProvider, EncryptorImpl encryptor, BlackListRepository blackListRepository, TokenExtractor tokenExtractor) {
+        this.accessTokenExpire = accessTokenExpire;
+        this.refreshTokenExpire = refreshTokenExpire;
         this.memberRepository = memberRepository;
         this.tokenProvider = tokenProvider;
         this.encryptor = encryptor;
@@ -59,8 +61,8 @@ public class AuthService {
 
         if (isValidAccessToken && isValidRefreshToken) {
             blackListRepository.saveAll(List.of(
-                    new BlackList(extractedAccessToken, Long.parseLong(accessTokenExpire)),
-                    new BlackList(extractedRefreshToken, Long.parseLong(refreshTokenExpire)))
+                    new BlackList(extractedAccessToken, accessTokenExpire),
+                    new BlackList(extractedRefreshToken, refreshTokenExpire))
             );
         } else {
             throw new InvalidTokenException("유효한 토큰이 아닙니다.");
@@ -89,7 +91,7 @@ public class AuthService {
         String newAccessToken = createAccessToken(memberId);
         String newRefreshToken = createRefreshToken(memberId);
 
-        blackListRepository.save(new BlackList(oldRefreshToken, Long.parseLong(refreshTokenExpire)));
+        blackListRepository.save(new BlackList(oldRefreshToken, refreshTokenExpire));
 
         return new RefreshResponse(newAccessToken, newRefreshToken);
     }

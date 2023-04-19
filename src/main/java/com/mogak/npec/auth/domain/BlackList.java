@@ -9,10 +9,9 @@ import org.springframework.data.redis.core.TimeToLive;
 @Getter
 public class BlackList {
     @Id
-    private String token;
-
+    private final String token;
     @TimeToLive
-    private Long ttl;
+    private final Long ttl;
 
     public BlackList(String token, Long ttl) {
         this.token = token;
