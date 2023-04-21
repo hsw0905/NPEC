@@ -1,6 +1,7 @@
 package com.mogak.npec.auth.domain;
 
 import com.mogak.npec.auth.annotation.ValidToken;
+import com.mogak.npec.auth.exception.InvalidTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,11 @@ public class AuthArgumentResolver implements HandlerMethodArgumentResolver {
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
 
-        String token = tokenExtractor.extractToken(request.getHeader("Authorization"));
+        String authorization = request.getHeader("Authorization");
+        if (authorization == null) {
+            throw new InvalidTokenException("헤더가 없습니다.");
+        }
+        String token = tokenExtractor.extractToken(authorization);
         return tokenProvider.getParsedClaims(token);
     }
 }
