@@ -3,8 +3,13 @@ package com.mogak.npec.board.controller;
 import com.mogak.npec.auth.annotation.ValidToken;
 import com.mogak.npec.board.application.BoardService;
 import com.mogak.npec.board.dto.BoardCreateRequest;
+import com.mogak.npec.board.dto.BoardListResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +35,12 @@ public class BoardController {
                                             @RequestBody @Valid BoardCreateRequest request) {
         Long boardId = boardService.createBoard(memberId, request);
         return ResponseEntity.created(URI.create("/boards/" + boardId)).build();
+    }
+
+    @GetMapping
+    public ResponseEntity<BoardListResponse> getBoards(@PageableDefault(sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        BoardListResponse boardListResponse = boardService.getBoards(pageable);
+        return ResponseEntity.ok(boardListResponse);
     }
 
     @PostMapping(value = "/{boardId}/images")

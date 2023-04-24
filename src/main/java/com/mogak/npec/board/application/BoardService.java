@@ -3,13 +3,17 @@ package com.mogak.npec.board.application;
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardImage;
 import com.mogak.npec.board.dto.BoardCreateRequest;
+import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardImageRepository;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
 import com.mogak.npec.member.repository.MemberRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +47,13 @@ public class BoardService {
         Board savedBoard = boardRepository.save(board);
 
         return savedBoard.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public BoardListResponse getBoards(Pageable pageable) {
+        Page<Board> boards = boardRepository.findAll(pageable);
+
+        return BoardListResponse.of(boards);
     }
 
     @Transactional
