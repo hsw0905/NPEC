@@ -4,6 +4,7 @@ import com.mogak.npec.auth.annotation.ValidToken;
 import com.mogak.npec.board.application.BoardService;
 import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardImageResponse;
+import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.common.aws.S3Helper;
 import jakarta.validation.Valid;
@@ -36,9 +37,15 @@ public class BoardController {
     }
 
     @GetMapping
-    public ResponseEntity<BoardListResponse> getBoards(@PageableDefault(sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        BoardListResponse boardListResponse = boardService.getBoards(pageable);
-        return ResponseEntity.ok(boardListResponse);
+    public ResponseEntity<BoardListResponse> getBoards(@PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        BoardListResponse response = boardService.getBoards(pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/{boardId}")
+    public ResponseEntity<BoardGetResponse> getBoard(@PathVariable Long boardId) {
+        BoardGetResponse response = boardService.getBoard(boardId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/images")

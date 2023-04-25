@@ -1,5 +1,6 @@
 package com.mogak.npec.board.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mogak.npec.board.domain.Board;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 public class BoardListResponse {
+    @JsonProperty(value = "boards")
     private List<BoardResponse> boardResponses;
     private int totalPageCount;
 

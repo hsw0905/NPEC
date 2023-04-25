@@ -3,6 +3,7 @@ package com.mogak.npec.board.application;
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardImageResponse;
+import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.common.aws.S3Helper;
@@ -21,15 +22,16 @@ import java.util.UUID;
 
 @Service
 public class BoardService {
-    private static final String BOARD_PATH = "boards";
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
-    private final S3Helper s3Helper;
+    private final BoardImageRepository boardImageRepository;
+    private final String imagePath;
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, BoardImageRepository boardImageRepository, @Value("${image.path}") String imagePath) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
-        this.s3Helper = s3Helper;
+        this.boardImageRepository = boardImageRepository;
+        this.imagePath = imagePath;
     }
 
     @Transactional
@@ -51,6 +53,14 @@ public class BoardService {
         return BoardListResponse.of(boards);
     }
 
+    @Transactional(readOnly = true)
+    public BoardGetResponse getBoard(Long boardId) {
+        Board board = boardRepository.findById(boardId).orElseThrow(
+                () -> new BoardNotFoundException("저장되지 않은 게시글입니다.")
+        );
+        return BoardGetResponse.of(board);
+    }
+
     @Transactional
     public BoardImageResponse uploadImages(Long memberId, List<MultipartFile> files) {
         Member member = memberRepository.findById(memberId)
@@ -70,4 +80,9 @@ public class BoardService {
         return new BoardImageResponse(paths);
     }
 
+    private Board findBoard(Long boardId) {
+        return boardRepository.findById(boardId).orElseThrow(
+                () -> new BoardNotFoundException("게시글을 찾을 수 없습니다.")
+        );
+    }
 }
