@@ -1,7 +1,12 @@
 package com.mogak.npec.member.domain;
 
 import com.mogak.npec.common.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,5 +36,9 @@ public class Member extends BaseEntity {
         this.nickname = nickname;
         this.email = email;
         this.password = password;
+    }
+
+    public boolean match(Member targetMember) {
+        return this.equals(targetMember);
     }
 }

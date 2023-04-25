@@ -5,6 +5,10 @@ import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardUpdateRequest;
+import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
+import com.mogak.npec.board.exceptions.BoardNotFoundException;
+import com.mogak.npec.board.repository.BoardImageRepository;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.common.aws.S3Helper;
 import com.mogak.npec.member.domain.Member;
@@ -55,10 +59,31 @@ public class BoardService {
 
     @Transactional(readOnly = true)
     public BoardGetResponse getBoard(Long boardId) {
-        Board board = boardRepository.findById(boardId).orElseThrow(
-                () -> new BoardNotFoundException("저장되지 않은 게시글입니다.")
-        );
-        return BoardGetResponse.of(board);
+        Board findBoard = findBoard(boardId);
+
+        return BoardGetResponse.of(findBoard);
+    }
+
+    @Transactional
+    public void updateBoard(Long boardId, Long memberId, BoardUpdateRequest request) {
+        Member findMember = findMember(memberId);
+        Board findBoard = findBoard(boardId);
+
+        verifyBoard(findBoard);
+        verifyMember(findMember, findBoard.getMember());
+
+        findBoard.update(request.getTitle(), request.getContent());
+    }
+
+    @Transactional
+    public void deleteBoard(Long boardId, Long memberId) {
+        Member findMember = findMember(memberId);
+        Board findBoard = findBoard(boardId);
+
+        verifyBoard(findBoard);
+        verifyMember(findMember, findBoard.getMember());
+
+        findBoard.delete();
     }
 
     @Transactional
@@ -80,9 +105,26 @@ public class BoardService {
         return new BoardImageResponse(paths);
     }
 
+    private void verifyBoard(Board findBoard) {
+        if (findBoard.isDeleted()) {
+            throw new BoardCanNotModifyException("삭제된 게시물 입니다.");
+        }
+    }
+
+    private void verifyMember(Member findMember, Member targetMember) {
+        if (!findMember.match(targetMember)) {
+            throw new BoardCanNotModifyException("게시글의 작성자와 요청한 작성자가 다릅니다.");
+        }
+    }
+
     private Board findBoard(Long boardId) {
         return boardRepository.findById(boardId).orElseThrow(
                 () -> new BoardNotFoundException("게시글을 찾을 수 없습니다.")
         );
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
     }
 }

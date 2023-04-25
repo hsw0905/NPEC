@@ -6,6 +6,7 @@ import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.common.aws.S3Helper;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,5 +63,15 @@ public class BoardController {
         BoardImageResponse response = boardService.uploadImages(memberId, files);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PutMapping(value = "/{boardId}")
+    public ResponseEntity<Void> updateBoard(@PathVariable Long boardId, @ValidToken Long memberId, @RequestBody BoardUpdateRequest request) {
+        boardService.updateBoard(boardId, memberId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(value = "/{boardId}")
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId, @ValidToken Long memberId) {
+        boardService.deleteBoard(boardId, memberId);
+        return ResponseEntity.noContent().build();
     }
 }

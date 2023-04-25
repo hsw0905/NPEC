@@ -34,4 +34,13 @@ public class Board extends BaseEntity {
         this.title = title;
         this.content = content;
     }
+
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
+    }
 }
