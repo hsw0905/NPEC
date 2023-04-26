@@ -2,13 +2,12 @@ package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.dto.BoardCreateRequest;
-import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardGetResponse;
+import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
-import com.mogak.npec.board.repository.BoardImageRepository;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.common.aws.S3Helper;
 import com.mogak.npec.member.domain.Member;
@@ -26,16 +25,15 @@ import java.util.UUID;
 
 @Service
 public class BoardService {
+    private static final String BOARD_PATH = "boards";
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
-    private final BoardImageRepository boardImageRepository;
-    private final String imagePath;
+    private final S3Helper s3Helper;
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, BoardImageRepository boardImageRepository, @Value("${image.path}") String imagePath) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
-        this.boardImageRepository = boardImageRepository;
-        this.imagePath = imagePath;
+        this.s3Helper = s3Helper;
     }
 
     @Transactional

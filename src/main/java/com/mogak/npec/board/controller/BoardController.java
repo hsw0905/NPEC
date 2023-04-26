@@ -3,11 +3,10 @@ package com.mogak.npec.board.controller;
 import com.mogak.npec.auth.annotation.ValidToken;
 import com.mogak.npec.board.application.BoardService;
 import com.mogak.npec.board.dto.BoardCreateRequest;
-import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardGetResponse;
+import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
-import com.mogak.npec.common.aws.S3Helper;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,12 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/boards")
@@ -63,6 +60,8 @@ public class BoardController {
         BoardImageResponse response = boardService.uploadImages(memberId, files);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PutMapping(value = "/{boardId}")
     public ResponseEntity<Void> updateBoard(@PathVariable Long boardId, @ValidToken Long memberId, @RequestBody BoardUpdateRequest request) {
         boardService.updateBoard(boardId, memberId, request);
