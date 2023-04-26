@@ -1,6 +1,7 @@
 package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardView;
 import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardImageResponse;
@@ -9,6 +10,7 @@ import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.common.aws.S3Helper;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
@@ -29,11 +31,13 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
     private final S3Helper s3Helper;
+    private final BoardViewRepository boardViewRepository;
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardViewRepository boardViewRepository) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
+        this.boardViewRepository = boardViewRepository;
     }
 
     @Transactional
@@ -55,11 +59,21 @@ public class BoardService {
         return BoardListResponse.of(boards);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BoardGetResponse getBoard(Long boardId) {
         Board findBoard = findBoard(boardId);
 
+        increaseViewCount(boardId, findBoard);
+
         return BoardGetResponse.of(findBoard);
+    }
+
+    private void increaseViewCount(Long boardId, Board findBoard) {
+        boardViewRepository.findByBoardId(boardId)
+                .ifPresentOrElse(
+                        boardView -> boardView.increaseCount(1),
+                        () -> boardViewRepository.save(new BoardView(findBoard, 1L))
+                );
     }
 
     @Transactional

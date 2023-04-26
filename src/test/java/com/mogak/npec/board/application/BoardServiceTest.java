@@ -1,10 +1,14 @@
 package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardView;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardUpdateRequest;
+import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +33,8 @@ class BoardServiceTest {
     private BoardRepository boardRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private BoardViewRepository boardViewRepository;
 
     private Board savedBoard;
     private Member member;
@@ -41,6 +47,7 @@ class BoardServiceTest {
 
     @AfterEach
     void tearDown() {
+        boardViewRepository.deleteAll();
         boardRepository.deleteAll();
     }
 
@@ -74,11 +81,116 @@ class BoardServiceTest {
         );
     }
 
+    @DisplayName("게시판 뷰가 이미 저장된 경우 상세조회를 요청하면 조회수가 증가한다.")
+    @Test
+    void getBoardWithIncreaseCount() {
+        // given
+        boardViewRepository.save(new BoardView(savedBoard, 1L));
+
+        // when
+        BoardGetResponse findBoard = boardService.getBoard(savedBoard.getId());
+
+        // then
+        Long afterViewCount = boardViewRepository.findByBoardId(findBoard.getId()).get().getCount();
+        assertThat(afterViewCount).isEqualTo(2L);
+    }
+
+    @DisplayName("저장된 게시판 뷰가 없는 경우 상세조회를 요청하면 엔티티를 생성하고 조회수를 증가한다.")
+    @Test
+    void getBoardWithIncreaseCount2() {
+        // given
+        boolean isPreset = boardViewRepository.findByBoardId(savedBoard.getId()).isPresent();
+        assertThat(isPreset).isFalse();
+
+        // when
+        BoardGetResponse findBoard = boardService.getBoard(savedBoard.getId());
+
+        // then
+        Long afterViewCount = boardViewRepository.findByBoardId(findBoard.getId()).get().getCount();
+        assertThat(afterViewCount).isEqualTo(1L);
+    }
+
     @DisplayName("저장되지 않은 게시판 Id로 상세조회를 요청하면 예외를 던진다.")
     @Test
     void getBoardWithFail() {
         assertThatThrownBy(
                 () -> boardService.getBoard(0L)
         ).isExactlyInstanceOf(BoardNotFoundException.class);
+    }
+
+    @DisplayName("게시판 수정을 요청하면 수정된다.")
+    @Test
+    void updateBoardWithSuccess() {
+        // given
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+
+        // when
+        boardService.updateBoard(savedBoard.getId(), member.getId(), request);
+
+        // then
+        Board findBoard = boardRepository.findById(savedBoard.getId()).get();
+
+        assertAll(
+                () -> assertThat(findBoard.getTitle()).isEqualTo(request.getTitle()),
+                () -> assertThat(findBoard.getContent()).isEqualTo(request.getContent()),
+                () -> assertThat(findBoard.getUpdatedAt()).isNotNull()
+        );
+    }
+
+    @DisplayName("게시물 작성자가 아닌 멤버가 수정을 요청한 경우 예외를 던진다.")
+    @Test
+    void updateBoardWithFail() {
+        // given
+        Member otherMember = memberRepository.save(new Member("kim update", "update@npec.com", "1234"));
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+
+        assertThatThrownBy(
+                () -> boardService.updateBoard(savedBoard.getId(), otherMember.getId(), request)
+        ).isExactlyInstanceOf(BoardCanNotModifyException.class);
+    }
+
+
+    @DisplayName("삭제된 게시물의 수정을 요청한 경우 예외를 던진다.")
+    @Test
+    void updateBoardWithDeletedBoard() {
+        Board deletedBoard = boardRepository.save(new Board(member, "수정 전 제목", "수정 전 내용", true));
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+
+        assertThatThrownBy(
+                () -> boardService.updateBoard(deletedBoard.getId(), member.getId(), request)
+        ).isExactlyInstanceOf(BoardCanNotModifyException.class);
+    }
+
+    @DisplayName("게시판 삭제를 요청하면 삭제한다.")
+    @Test
+    void deleteBoardWithSuccess() {
+        // when
+        boardService.deleteBoard(savedBoard.getId(), member.getId());
+
+        // then
+        Board findBoard = boardRepository.findById(savedBoard.getId()).get();
+        assertThat(findBoard.isDeleted()).isTrue();
+    }
+
+    @DisplayName("게시물 작성자가 아닌 멤버가 삭제를 요청한 경우 예외를 던진다.")
+    @Test
+    void deleteBoardWithFail() {
+        // given
+        Member otherMember = memberRepository.save(new Member("kim update", "update@npec.com", "1234"));
+
+        assertThatThrownBy(
+                () -> boardService.deleteBoard(savedBoard.getId(), otherMember.getId())
+        ).isExactlyInstanceOf(BoardCanNotModifyException.class);
+    }
+
+
+    @DisplayName("삭제된 게시물의 삭제를 요청한 경우 예외를 던진다.")
+    @Test
+    void deleteBoardWithDeletedBoard() {
+        Board deletedBoard = boardRepository.save(new Board(member, "수정 전 제목", "수정 전 내용", true));
+
+        assertThatThrownBy(
+                () -> boardService.deleteBoard(deletedBoard.getId(), member.getId())
+        ).isExactlyInstanceOf(BoardCanNotModifyException.class);
     }
 }
