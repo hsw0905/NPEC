@@ -2,7 +2,6 @@ package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
-import com.mogak.npec.board.domain.BoardView;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
@@ -90,33 +89,13 @@ class BoardServiceTest {
         );
     }
 
-    @DisplayName("게시판 뷰가 이미 저장된 경우 상세조회를 요청하면 조회수가 증가한다.")
+    @DisplayName("게시판 상세조회를 요청하면 조회수가 증가한다.")
     @Test
     void getBoardWithIncreaseCount() {
-        // given
-        boardViewRepository.save(new BoardView(savedBoard, 1L));
+        boardService.getBoard(savedBoard.getId());
 
-        // when
-        BoardGetResponse findBoard = boardService.getBoard(savedBoard.getId());
-
-        // then
-        Long afterViewCount = boardViewRepository.findByBoardId(findBoard.getId()).get().getCount();
-        assertThat(afterViewCount).isEqualTo(2L);
-    }
-
-    @DisplayName("저장된 게시판 뷰가 없는 경우 상세조회를 요청하면 엔티티를 생성하고 조회수를 증가한다.")
-    @Test
-    void getBoardWithIncreaseCount2() {
-        // given
-        boolean isPreset = boardViewRepository.findByBoardId(savedBoard.getId()).isPresent();
-        assertThat(isPreset).isFalse();
-
-        // when
-        BoardGetResponse findBoard = boardService.getBoard(savedBoard.getId());
-
-        // then
-        Long afterViewCount = boardViewRepository.findByBoardId(findBoard.getId()).get().getCount();
-        assertThat(afterViewCount).isEqualTo(1L);
+        Long viewCount = boardRepository.findById(savedBoard.getId()).get().getViewCount();
+        assertThat(viewCount).isEqualTo(1L);
     }
 
     @DisplayName("저장되지 않은 게시판 Id로 상세조회를 요청하면 예외를 던진다.")
@@ -142,7 +121,7 @@ class BoardServiceTest {
         assertAll(
                 () -> assertThat(findBoard.getTitle()).isEqualTo(request.getTitle()),
                 () -> assertThat(findBoard.getContent()).isEqualTo(request.getContent()),
-                () -> assertThat(findBoard.getUpdatedAt()).isNotNull()
+                () -> assertThat(findBoard.getModifiedAt()).isNotNull()
         );
     }
 

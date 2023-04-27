@@ -2,8 +2,11 @@ package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
-import com.mogak.npec.board.domain.BoardView;
-import com.mogak.npec.board.dto.*;
+import com.mogak.npec.board.dto.BoardCreateRequest;
+import com.mogak.npec.board.dto.BoardGetResponse;
+import com.mogak.npec.board.dto.BoardImageResponse;
+import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
@@ -21,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class BoardService {
@@ -63,17 +69,8 @@ public class BoardService {
     public BoardGetResponse getBoard(Long boardId) {
         Board findBoard = findBoard(boardId);
 
-        increaseViewCount(boardId, findBoard);
-
+        findBoard.increaseViewCount();
         return BoardGetResponse.of(findBoard);
-    }
-
-    private void increaseViewCount(Long boardId, Board findBoard) {
-        boardViewRepository.findByBoardId(boardId)
-                .ifPresentOrElse(
-                        boardView -> boardView.increaseCount(1),
-                        () -> boardViewRepository.save(new BoardView(findBoard, 1L))
-                );
     }
 
     @Transactional

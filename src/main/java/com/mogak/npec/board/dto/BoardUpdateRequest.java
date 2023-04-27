@@ -7,6 +7,9 @@ public class BoardUpdateRequest {
     private String title;
     private String content;
 
+    public BoardUpdateRequest() {
+    }
+
     public BoardUpdateRequest(String title, String content) {
         this.title = title;
         this.content = content;
