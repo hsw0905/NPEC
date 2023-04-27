@@ -1,14 +1,14 @@
 package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardLike;
 import com.mogak.npec.board.domain.BoardView;
-import com.mogak.npec.board.dto.BoardCreateRequest;
-import com.mogak.npec.board.dto.BoardGetResponse;
-import com.mogak.npec.board.dto.BoardImageResponse;
-import com.mogak.npec.board.dto.BoardListResponse;
-import com.mogak.npec.board.dto.BoardUpdateRequest;
+import com.mogak.npec.board.dto.*;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
+import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
+import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
+import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.common.aws.S3Helper;
@@ -21,9 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class BoardService {
@@ -32,12 +30,14 @@ public class BoardService {
     private final MemberRepository memberRepository;
     private final S3Helper s3Helper;
     private final BoardViewRepository boardViewRepository;
+    private final BoardLikeRepository boardLikeRepository;
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardViewRepository boardViewRepository) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardViewRepository boardViewRepository, BoardLikeRepository boardLikeRepository) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
         this.boardViewRepository = boardViewRepository;
+        this.boardLikeRepository = boardLikeRepository;
     }
 
     @Transactional
@@ -106,7 +106,7 @@ public class BoardService {
 
 
         files.forEach(image -> {
-            String extension = image.getContentType().split("/")[1];
+            String extension = Objects.requireNonNull(image.getContentType()).split("/")[1];
             String imageName = UUID.randomUUID() + "." + extension;
             String path = member.getEmail() + "/" + BOARD_PATH;
 
@@ -138,5 +138,31 @@ public class BoardService {
     private Member findMember(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public void likeBoard(Long boardId, Long memberId) {
+        Member findMember = findMember(memberId);
+        Board findBoard = findBoard(boardId);
+
+        if (boardLikeRepository.existsByMemberIdAndBoardId(findMember.getId(), findBoard.getId())) {
+            throw new MemberAlreadyLikeBoardException("이미 추천한 게시물 입니다.");
+        }
+        boardLikeRepository.save(new BoardLike(findMember, findBoard));
+        findBoard.increaseLikeCount();
+
+    }
+
+
+    @Transactional
+    public void cancelLikeBoard(Long boardId, Long memberId) {
+        Member findMember = findMember(memberId);
+        Board findBoard = findBoard(boardId);
+
+        BoardLike boardLike = boardLikeRepository.findByMemberIdAndBoardId(findMember.getId(), findBoard.getId())
+                .orElseThrow(() -> new MemberNotLikeBoardException("사용자가 추천한 게시물이 아닙니다."));
+
+        boardLikeRepository.delete(boardLike);
+        findBoard.decreaseLikeCount();
     }
 }

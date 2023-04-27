@@ -1,12 +1,16 @@
 package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardLike;
 import com.mogak.npec.board.domain.BoardView;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
+import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
+import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
+import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.member.domain.Member;
@@ -19,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,6 +41,8 @@ class BoardServiceTest {
     private MemberRepository memberRepository;
     @Autowired
     private BoardViewRepository boardViewRepository;
+    @Autowired
+    private BoardLikeRepository boardLikeRepository;
 
     private Board savedBoard;
     private Member member;
@@ -48,6 +56,7 @@ class BoardServiceTest {
     @AfterEach
     void tearDown() {
         boardViewRepository.deleteAll();
+        boardLikeRepository.deleteAll();
         boardRepository.deleteAll();
     }
 
@@ -192,5 +201,64 @@ class BoardServiceTest {
         assertThatThrownBy(
                 () -> boardService.deleteBoard(deletedBoard.getId(), member.getId())
         ).isExactlyInstanceOf(BoardCanNotModifyException.class);
+    }
+
+    @DisplayName("게시물을 추천하면 추천 카운트가 1 증가한다.")
+    @Test
+    void likeBoardSuccess() {
+        // given
+        Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+
+        // when
+        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+
+        // then
+        List<BoardLike> boardLikes = boardLikeRepository.findAll();
+        List<Board> boards = boardRepository.findAll();
+
+        assertThat(boardLikes.size()).isEqualTo(1);
+        assertThat(boards.get(0).getLikeCount()).isEqualTo(1);
+    }
+
+    @DisplayName("같은 사용자가 동일 게시물에 대해 중복 추천 시 익셉션을 던진다.")
+    @Test
+    void throwExceptionWhenDuplicatedLike() {
+        // given
+        Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+
+        // when then
+        assertThatThrownBy(() -> boardService.likeBoard(savedBoard.getId(), newMember.getId()))
+                .isInstanceOf(MemberAlreadyLikeBoardException.class);
+    }
+
+    @DisplayName("추천 취소시 해당 게시물의 추천 카운트가 1 감소한다.")
+    @Test
+    void cancelLikeBoardSuccess() {
+        // given
+        Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+
+        // when
+        boardService.cancelLikeBoard(savedBoard.getId(), newMember.getId());
+
+        // then
+        List<BoardLike> boardLikes = boardLikeRepository.findAll();
+        List<Board> boards = boardRepository.findAll();
+
+        assertThat(boardLikes.size()).isEqualTo(0);
+        assertThat(boards.get(0).getLikeCount()).isEqualTo(0);
+    }
+
+    @DisplayName("추천을 하지 않은 사용자가 추천 취소 요청이 올 경우 익셉션을 던진다.")
+    @Test
+    void throwExceptionWhenMemberWhoNotCanceledLikeDoCancel() {
+        // given
+        Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+
+        // when
+        assertThatThrownBy(() -> boardService.cancelLikeBoard(savedBoard.getId(), member.getId()))
+                .isInstanceOf(MemberNotLikeBoardException.class);
     }
 }

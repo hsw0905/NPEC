@@ -73,4 +73,16 @@ public class BoardController {
         boardService.deleteBoard(boardId, memberId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(value = "/{boardId}/like")
+    public ResponseEntity<Void> likeBoard(@PathVariable Long boardId, @ValidToken Long memberId) {
+        boardService.likeBoard(boardId, memberId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping(value = "/{boardId}/like")
+    public ResponseEntity<Void> cancelLikeBoard(@PathVariable Long boardId, @ValidToken Long memberId) {
+        boardService.cancelLikeBoard(boardId, memberId);
+        return ResponseEntity.noContent().build();
+    }
 }

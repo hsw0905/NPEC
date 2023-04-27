@@ -29,6 +29,9 @@ public class Board extends BaseEntity {
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
+    @Column(name = "like_count")
+    private Long likeCount = 0L;
+
     public Board(Member member, String title, String content) {
         this.member = member;
         this.title = title;
@@ -49,5 +52,15 @@ public class Board extends BaseEntity {
 
     public void delete() {
         this.isDeleted = true;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 }
