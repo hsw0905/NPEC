@@ -60,7 +60,7 @@ public class BoardService {
 
     @Transactional(readOnly = true)
     public BoardListResponse getBoards(Pageable pageable) {
-        Page<Board> boards = boardRepository.findAll(pageable);
+        Page<Board> boards = boardRepository.findAllByIsDeletedFalse(pageable);
 
         return BoardListResponse.of(boards);
     }
