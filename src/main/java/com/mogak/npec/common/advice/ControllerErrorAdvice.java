@@ -2,6 +2,9 @@ package com.mogak.npec.common.advice;
 
 import com.mogak.npec.common.dto.ErrorResponse;
 import com.mogak.npec.common.exception.BadRequestException;
+import com.mogak.npec.common.exception.NotFoundException;
+import com.mogak.npec.common.exception.UnAuthorizedException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +24,16 @@ public class ControllerErrorAdvice {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException e) {
         return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(UnAuthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnAuthorizedException(UnAuthorizedException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
     }
 
     @ExceptionHandler(RuntimeException.class)
