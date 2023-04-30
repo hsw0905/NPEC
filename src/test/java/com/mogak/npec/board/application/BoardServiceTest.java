@@ -11,7 +11,6 @@ import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
 import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
 import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
-import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -39,8 +38,6 @@ class BoardServiceTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private BoardViewRepository boardViewRepository;
-    @Autowired
     private BoardLikeRepository boardLikeRepository;
 
     private Board savedBoard;
@@ -54,7 +51,6 @@ class BoardServiceTest {
 
     @AfterEach
     void tearDown() {
-        boardViewRepository.deleteAll();
         boardLikeRepository.deleteAll();
         boardRepository.deleteAll();
     }

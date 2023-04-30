@@ -13,8 +13,9 @@ import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
 import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
 import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
-import com.mogak.npec.board.repository.BoardViewRepository;
 import com.mogak.npec.common.aws.S3Helper;
+import com.mogak.npec.hashtag.application.HashTagService;
+import com.mogak.npec.hashtag.domain.HashTag;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
 import com.mogak.npec.member.repository.MemberRepository;
@@ -26,8 +27,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -35,15 +38,16 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
     private final S3Helper s3Helper;
-    private final BoardViewRepository boardViewRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final HashTagService hashTagService;
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardViewRepository boardViewRepository, BoardLikeRepository boardLikeRepository) {
+
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
-        this.boardViewRepository = boardViewRepository;
         this.boardLikeRepository = boardLikeRepository;
+        this.hashTagService = hashTagService;
     }
 
     @Transactional
@@ -55,6 +59,8 @@ public class BoardService {
 
         Board savedBoard = boardRepository.save(board);
 
+        hashTagService.createHashTags(savedBoard, request.getHashTags());
+
         return savedBoard.getId();
     }
 
@@ -62,7 +68,10 @@ public class BoardService {
     public BoardListResponse getBoards(Pageable pageable) {
         Page<Board> boards = boardRepository.findAllByIsDeletedFalse(pageable);
 
-        return BoardListResponse.of(boards);
+        List<Long> boardIds = boards.stream().map(Board::getId).collect(Collectors.toList());
+        Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
+
+        return BoardListResponse.of(boards, hashTagsByBoardId);
     }
 
     @Transactional
@@ -70,7 +79,10 @@ public class BoardService {
         Board findBoard = findBoard(boardId);
 
         findBoard.increaseViewCount();
-        return BoardGetResponse.of(findBoard);
+
+        List<HashTag> hashTags = hashTagService.getHashTags(findBoard.getId());
+
+        return BoardGetResponse.of(findBoard, hashTags);
     }
 
     @Transactional
