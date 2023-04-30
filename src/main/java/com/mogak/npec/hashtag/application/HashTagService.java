@@ -3,6 +3,7 @@ package com.mogak.npec.hashtag.application;
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.hashtag.domain.BoardHashTag;
 import com.mogak.npec.hashtag.domain.HashTag;
+import com.mogak.npec.hashtag.dto.HashTagListResponse;
 import com.mogak.npec.hashtag.repository.BoardHashTagRepository;
 import com.mogak.npec.hashtag.repository.HashTagRepository;
 import org.springframework.stereotype.Service;
@@ -49,9 +50,15 @@ public class HashTagService {
 
     private List<HashTag> saveOrGetHashTags(List<String> tagNames) {
         return tagNames.stream()
-                .map(tagName -> hashTagRepository.findByName(tagName).orElseGet(
+                .map(tagName -> hashTagRepository.findByName(tagName.trim()).orElseGet(
                                 () -> hashTagRepository.save(new HashTag(tagName))
                         )
                 ).collect(Collectors.toList());
+    }
+
+    public HashTagListResponse searchWithName(String name) {
+        List<HashTag> findHashTags = hashTagRepository.findAllByNameStartsWith(name.trim());
+
+        return HashTagListResponse.of(findHashTags);
     }
 }
