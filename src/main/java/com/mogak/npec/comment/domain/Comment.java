@@ -41,21 +41,26 @@ public class Comment extends BaseEntity {
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
-    private Comment(Member member, Board board, Comment parent, String content) {
+    private Comment(Member member, Board board, Comment parent, String content, boolean isDeleted) {
         this.member = member;
         this.board = board;
         this.parent = parent;
         this.content = content;
+        this.isDeleted = isDeleted;
     }
 
-    public static Comment parent(Member member, Board board, String content) {
-        return new Comment(member, board, null, content);
+    public static Comment parent(Member member, Board board, String content, boolean isDeleted) {
+        return new Comment(member, board, null, content, isDeleted);
     }
 
-    public static Comment child(Member member, Board board, Comment parent, String content) {
-        Comment child = new Comment(member, board, parent, content);
+    public static Comment child(Member member, Board board, Comment parent, String content, boolean isDeleted) {
+        Comment child = new Comment(member, board, parent, content, isDeleted);
         parent.getChildren().add(child);
 
         return child;
+    }
+
+    public boolean isParent() {
+        return parent == null;
     }
 }
