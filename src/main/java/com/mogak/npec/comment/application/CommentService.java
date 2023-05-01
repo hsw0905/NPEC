@@ -5,8 +5,10 @@ import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.comment.domain.Comment;
+import com.mogak.npec.comment.dto.CommentsResponse;
 import com.mogak.npec.comment.dto.CreateCommentServiceDto;
 import com.mogak.npec.comment.dto.CreateReplyServiceDto;
+import com.mogak.npec.comment.dto.FindCommentsServiceDto;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
 import com.mogak.npec.comment.exception.CommentDepthExceedException;
 import com.mogak.npec.comment.exception.CommentNotFoundException;
@@ -36,7 +38,7 @@ public class CommentService {
 
         verifyBoard(board);
 
-        Comment comment = Comment.parent(member, board, dto.content(), false);
+        Comment comment = Comment.parent(member, board, dto.content(), false, false);
 
         commentRepository.save(comment);
     }
@@ -51,7 +53,7 @@ public class CommentService {
         verifyParent(parent);
         verifyBoard(board);
 
-        Comment child = Comment.child(member, board, parent, dto.content(), false);
+        Comment child = Comment.child(member, board, parent, dto.content(), false, false);
 
         commentRepository.save(child);
     }
@@ -88,5 +90,12 @@ public class CommentService {
         if (findComment.isDeleted()) {
             throw new CommentCanNotModifyException("삭제된 댓글 입니다.");
         }
+    }
+
+    public CommentsResponse findComments(FindCommentsServiceDto dto) {
+        Board board = findBoard(dto.boardId());
+
+
+        return null;
     }
 }
