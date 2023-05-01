@@ -123,7 +123,7 @@ public class CommentServiceTest {
     @Test
     void createReplySuccess() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", false);
+        Comment comment = Comment.parent(member, board, "댓글내용", false, false);
         commentRepository.save(comment);
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
 
@@ -144,7 +144,7 @@ public class CommentServiceTest {
     @Test
     void createReplyFail1() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", false);
+        Comment comment = Comment.parent(member, board, "댓글내용", false, false);
         commentRepository.save(comment);
 
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
@@ -164,7 +164,7 @@ public class CommentServiceTest {
     @Test
     void createReplyFail2() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", true);
+        Comment comment = Comment.parent(member, board, "댓글내용", true, false);
         commentRepository.save(comment);
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
 

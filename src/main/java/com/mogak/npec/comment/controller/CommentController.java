@@ -2,17 +2,11 @@ package com.mogak.npec.comment.controller;
 
 import com.mogak.npec.auth.annotation.ValidToken;
 import com.mogak.npec.comment.application.CommentService;
-import com.mogak.npec.comment.dto.CommentCreateRequest;
-import com.mogak.npec.comment.dto.CreateCommentServiceDto;
-import com.mogak.npec.comment.dto.CreateReplyServiceDto;
-import com.mogak.npec.comment.dto.ReplyCreateRequest;
+import com.mogak.npec.comment.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class CommentController {
@@ -37,6 +31,13 @@ public class CommentController {
         commentService.createReply(new CreateReplyServiceDto(memberId, commentId, request.getContent()));
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/boards/{boardId}/comments")
+    public ResponseEntity<CommentsResponse> findComments(@PathVariable Long boardId, @ValidToken Long memberId) {
+        CommentsResponse response = commentService.findComments(new FindCommentsServiceDto(memberId, boardId));
+
+        return ResponseEntity.ok(response);
     }
 
 }
