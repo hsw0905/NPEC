@@ -63,4 +63,8 @@ public class Comment extends BaseEntity {
     public boolean isParent() {
         return parent == null;
     }
+
+    public void modifyContent(String content) {
+        this.content = content;
+    }
 }

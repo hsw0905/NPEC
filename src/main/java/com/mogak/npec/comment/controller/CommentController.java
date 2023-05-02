@@ -40,4 +40,13 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/comments/{commentId}")
+    public ResponseEntity<CommentModifyResponse> modifyComment(@PathVariable Long commentId, @ValidToken Long memberId,
+                                                               @RequestBody CommentModifyRequest request) {
+        CommentModifyResponse response = commentService.modifyComment(new ModifyCommentServiceDto(memberId, commentId,
+                request.getContent()));
+
+        return ResponseEntity.ok(response);
+    }
+
 }

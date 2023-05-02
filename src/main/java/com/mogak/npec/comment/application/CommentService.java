@@ -9,6 +9,7 @@ import com.mogak.npec.comment.dto.*;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
 import com.mogak.npec.comment.exception.CommentDepthExceedException;
 import com.mogak.npec.comment.exception.CommentNotFoundException;
+import com.mogak.npec.comment.exception.InvalidCommentWriterException;
 import com.mogak.npec.comment.repository.CommentRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -130,5 +132,25 @@ public class CommentService {
         }
         return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
                 comment.getCreatedAt(), comment.getUpdatedAt());
+    }
+
+    @Transactional
+    public CommentModifyResponse modifyComment(ModifyCommentServiceDto dto) {
+        Comment comment = findComment(dto.commentId());
+        Member writer = comment.getMember();
+
+        verifyComment(comment);
+        verifyWriter(writer, dto.memberId());
+
+        comment.modifyContent(dto.content());
+
+        return new CommentModifyResponse(comment.getId(), writer.getNickname(), dto.content(),
+                comment.getCreatedAt(), comment.getUpdatedAt());
+    }
+
+    private void verifyWriter(Member writer, Long memberId) {
+        if (!writer.getId().equals(memberId)) {
+            throw new InvalidCommentWriterException("댓글 작성자가 아닙니다.");
+        }
     }
 }
