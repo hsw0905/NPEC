@@ -49,4 +49,12 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId, @ValidToken Long memberId) {
+
+        commentService.deleteComment(new DeleteCommentServiceDto(memberId, commentId));
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -67,4 +67,8 @@ public class Comment extends BaseEntity {
     public void modifyContent(String content) {
         this.content = content;
     }
+
+    public void deleteComment() {
+        isDeleted = true;
+    }
 }

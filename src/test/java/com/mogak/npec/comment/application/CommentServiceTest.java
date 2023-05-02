@@ -272,4 +272,57 @@ public class CommentServiceTest {
         assertThatThrownBy(() -> commentService.modifyComment(dto))
                 .isInstanceOf(InvalidCommentWriterException.class);
     }
+
+    @DisplayName("작성자의 요청인 경우 댓글과 하위 대댓글이 삭제된다.")
+    @Test
+    void deleteCommentSuccess() {
+        // given
+        Comment parent = Comment.parent(member, board, "댓글내용", false);
+        Comment child = Comment.child(member, board, parent, "대댓글내용", false);
+        parent.getChildren().add(child);
+
+        commentRepository.save(parent);
+        commentRepository.save(child);
+
+        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), parent.getId());
+        // when
+        commentService.deleteComment(dto);
+
+        // then
+        List<Comment> comments = commentRepository.findAll();
+
+        for (Comment comment : comments) {
+            assertThat(comment.isDeleted()).isTrue();
+        }
+    }
+
+    @DisplayName("작성자가 아니면 삭제 요청이 실패한다.")
+    @Test
+    void deleteCommentFail1() {
+        // given
+        Comment comment = Comment.parent(member, board, "댓글내용", false);
+        commentRepository.save(comment);
+
+        Member member2 = new Member("tester2", "test2@example.com", "1234ab1!");
+        memberRepository.save(member2);
+
+        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member2.getId(), comment.getId());
+        // when then
+        assertThatThrownBy(() -> commentService.deleteComment(dto))
+                .isInstanceOf(InvalidCommentWriterException.class);
+    }
+
+    @DisplayName("이미 삭제된 댓글에 삭제 요청이 온 경우 실패한다.")
+    @Test
+    void deleteCommentFail2() {
+        // given
+        Comment comment = Comment.parent(member, board, "댓글내용", true);
+        commentRepository.save(comment);
+
+        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), comment.getId());
+
+        // when then
+        assertThatThrownBy(() -> commentService.deleteComment(dto))
+                .isInstanceOf(CommentCanNotModifyException.class);
+    }
 }
