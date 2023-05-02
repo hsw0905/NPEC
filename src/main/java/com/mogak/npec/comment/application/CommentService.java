@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -102,7 +101,7 @@ public class CommentService {
         List<CommentResponse> commentResponses = new ArrayList<>();
 
         List<Comment> parents = commentRepository.findParentsByBoardId(board.getId());
-        for (Comment parent: parents) {
+        for (Comment parent : parents) {
             commentResponses.add(toCommentResponse(parent));
         }
 
@@ -153,4 +152,27 @@ public class CommentService {
             throw new InvalidCommentWriterException("댓글 작성자가 아닙니다.");
         }
     }
+
+    @Transactional
+    public void deleteComment(DeleteCommentServiceDto dto) {
+        Comment comment = findComment(dto.commentId());
+        Member writer = comment.getMember();
+        List<Comment> children = comment.getChildren();
+
+        verifyComment(comment);
+        verifyWriter(writer, dto.memberId());
+
+        if (comment.isParent()) {
+            deleteChild(children);
+        }
+
+        comment.deleteComment();
+    }
+
+    private void deleteChild(List<Comment> children) {
+        children.stream().filter(child -> !child.isDeleted())
+                .forEach(Comment::deleteComment);
+    }
+
+
 }
