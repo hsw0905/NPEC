@@ -225,4 +225,18 @@ public class CommentServiceTest {
                 () -> assertThat(comments.getComments().get(0).getReplies().get(0).getContent()).isNull()
         );
     }
+
+    @DisplayName("댓글이 없을 땐 response 값이 비어있고, size는 0이다.")
+    @Test
+    void responseWhenNoComments() {
+        // given
+        FindCommentsServiceDto dto = new FindCommentsServiceDto(member.getId(), board.getId());
+
+        // when
+        CommentsResponse comments = commentService.findComments(dto);
+
+        // then
+        assertThat(comments.getCount()).isEqualTo(0);
+        assertThat(comments.getComments()).isEmpty();
+    }
 }
