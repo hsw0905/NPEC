@@ -5,12 +5,10 @@ import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.comment.domain.Comment;
-import com.mogak.npec.comment.dto.CommentsResponse;
-import com.mogak.npec.comment.dto.CreateCommentServiceDto;
-import com.mogak.npec.comment.dto.CreateReplyServiceDto;
-import com.mogak.npec.comment.dto.FindCommentsServiceDto;
+import com.mogak.npec.comment.dto.*;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
 import com.mogak.npec.comment.exception.CommentDepthExceedException;
+import com.mogak.npec.comment.exception.InvalidCommentWriterException;
 import com.mogak.npec.comment.repository.CommentRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
@@ -238,5 +236,40 @@ public class CommentServiceTest {
         // then
         assertThat(comments.getCount()).isEqualTo(0);
         assertThat(comments.getComments()).isEmpty();
+    }
+
+
+    @DisplayName("작성자의 수정 요청일 경우 댓글이 수정된다.")
+    @Test
+    void modifyCommentSuccess() {
+        // given
+        String modifyContent = "댓글수정내용";
+        Comment comment = Comment.parent(member, board, "댓글내용", false);
+        commentRepository.save(comment);
+
+        ModifyCommentServiceDto dto = new ModifyCommentServiceDto(member.getId(), comment.getId(), modifyContent);
+        // when
+        CommentModifyResponse response = commentService.modifyComment(dto);
+
+        // then
+        assertThat(response.getContent()).isEqualTo(modifyContent);
+        assertThat(response.getWriter()).isEqualTo(member.getNickname());
+    }
+
+    @DisplayName("작성자가 아닌 경우 수정 요청이 실패한다.")
+    @Test
+    void modifyCommentFail1() {
+        // given
+        Comment comment = Comment.parent(member, board, "댓글내용", false);
+        commentRepository.save(comment);
+
+        Member member2 = new Member("tester2", "test2@example.com", "1234ab1!");
+        memberRepository.save(member2);
+
+        ModifyCommentServiceDto dto = new ModifyCommentServiceDto(member2.getId(), comment.getId(), "댓글수정내용");
+
+        // when then
+        assertThatThrownBy(() -> commentService.modifyComment(dto))
+                .isInstanceOf(InvalidCommentWriterException.class);
     }
 }
