@@ -11,6 +11,10 @@ public class CommentsResponse {
 
     public CommentsResponse(List<CommentResponse> comments) {
         this.comments = comments;
-        this.count = (long) comments.size();
+        if (comments.isEmpty()) {
+            this.count = 0L;
+        } else {
+            this.count = (long) comments.size();
+        }
     }
 }
