@@ -5,10 +5,7 @@ import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.comment.domain.Comment;
-import com.mogak.npec.comment.dto.CommentsResponse;
-import com.mogak.npec.comment.dto.CreateCommentServiceDto;
-import com.mogak.npec.comment.dto.CreateReplyServiceDto;
-import com.mogak.npec.comment.dto.FindCommentsServiceDto;
+import com.mogak.npec.comment.dto.*;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
 import com.mogak.npec.comment.exception.CommentDepthExceedException;
 import com.mogak.npec.comment.exception.CommentNotFoundException;
@@ -18,6 +15,10 @@ import com.mogak.npec.member.exception.MemberNotFoundException;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -38,7 +39,7 @@ public class CommentService {
 
         verifyBoard(board);
 
-        Comment comment = Comment.parent(member, board, dto.content(), false, false);
+        Comment comment = Comment.parent(member, board, dto.content(), false);
 
         commentRepository.save(comment);
     }
@@ -53,7 +54,7 @@ public class CommentService {
         verifyParent(parent);
         verifyBoard(board);
 
-        Comment child = Comment.child(member, board, parent, dto.content(), false, false);
+        Comment child = Comment.child(member, board, parent, dto.content(), false);
 
         commentRepository.save(child);
     }
@@ -92,10 +93,42 @@ public class CommentService {
         }
     }
 
+    @Transactional(readOnly = true)
     public CommentsResponse findComments(FindCommentsServiceDto dto) {
         Board board = findBoard(dto.boardId());
 
+        List<CommentResponse> commentResponses = new ArrayList<>();
 
-        return null;
+        List<Comment> parents = commentRepository.findParentsByBoardId(board.getId());
+        for (Comment parent: parents) {
+            commentResponses.add(toCommentResponse(parent));
+        }
+
+        return new CommentsResponse(commentResponses);
+    }
+
+    private CommentResponse toCommentResponse(Comment comment) {
+        List<ReplyResponse> replies;
+        if (!comment.getChildren().isEmpty()) {
+            replies = comment.getChildren().stream().map(this::toReplyResponse).collect(Collectors.toList());
+        } else {
+            replies = new ArrayList<>();
+        }
+
+        if (comment.isDeleted()) {
+            return new CommentResponse(comment.getId(), comment.getMember().getNickname(), null,
+                    replies, comment.getCreatedAt(), comment.getUpdatedAt());
+        }
+        return new CommentResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
+                replies, comment.getCreatedAt(), comment.getUpdatedAt());
+    }
+
+    private ReplyResponse toReplyResponse(Comment comment) {
+        if (comment.isDeleted()) {
+            return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), null,
+                    comment.getCreatedAt(), comment.getUpdatedAt());
+        }
+        return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
+                comment.getCreatedAt(), comment.getUpdatedAt());
     }
 }

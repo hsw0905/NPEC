@@ -5,8 +5,10 @@ import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
 import com.mogak.npec.comment.domain.Comment;
+import com.mogak.npec.comment.dto.CommentsResponse;
 import com.mogak.npec.comment.dto.CreateCommentServiceDto;
 import com.mogak.npec.comment.dto.CreateReplyServiceDto;
+import com.mogak.npec.comment.dto.FindCommentsServiceDto;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
 import com.mogak.npec.comment.exception.CommentDepthExceedException;
 import com.mogak.npec.comment.repository.CommentRepository;
@@ -123,7 +125,7 @@ public class CommentServiceTest {
     @Test
     void createReplySuccess() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", false, false);
+        Comment comment = Comment.parent(member, board, "댓글내용", false);
         commentRepository.save(comment);
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
 
@@ -144,7 +146,7 @@ public class CommentServiceTest {
     @Test
     void createReplyFail1() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", false, false);
+        Comment comment = Comment.parent(member, board, "댓글내용", false);
         commentRepository.save(comment);
 
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
@@ -164,7 +166,7 @@ public class CommentServiceTest {
     @Test
     void createReplyFail2() {
         // given
-        Comment comment = Comment.parent(member, board, "댓글내용", true, false);
+        Comment comment = Comment.parent(member, board, "댓글내용", true);
         commentRepository.save(comment);
         CreateReplyServiceDto dto = new CreateReplyServiceDto(member.getId(), comment.getId(), "대댓글내용");
 
@@ -172,5 +174,55 @@ public class CommentServiceTest {
         assertThatThrownBy(() -> commentService.createReply(dto))
                 .isInstanceOf(CommentCanNotModifyException.class);
 
+    }
+
+    @DisplayName("댓글을 가져오면 대댓글도 같이 가져온다.")
+    @Test
+    void findCommentsSuccess() {
+        // given
+        Comment parent = Comment.parent(member, board, "댓글내용", false);
+        Comment child = Comment.child(member, board, parent, "대댓글내용", false);
+        parent.getChildren().add(child);
+
+        commentRepository.save(parent);
+        commentRepository.save(child);
+        FindCommentsServiceDto dto = new FindCommentsServiceDto(member.getId(), board.getId());
+
+        // when
+        CommentsResponse comments = commentService.findComments(dto);
+
+        // then
+        assertAll(
+                () -> assertThat(comments.getCount()).isEqualTo(1),
+                () -> assertThat(comments.getComments().get(0).getWriter()).isEqualTo(member.getNickname()),
+                () -> assertThat(comments.getComments().get(0).getContent()).isEqualTo(parent.getContent()),
+                () -> assertThat(comments.getComments().get(0).getReplies().size()).isEqualTo(1),
+                () -> assertThat(comments.getComments().get(0).getReplies().get(0).getContent()).isEqualTo(child.getContent())
+        );
+    }
+
+    @DisplayName("삭제된 댓글 및 대댓글은 내용을 담지 않는다.")
+    @Test
+    void findCommentsWithoutDeletedContent() {
+        // given
+        Comment parent = Comment.parent(member, board, "댓글내용", true);
+        Comment child = Comment.child(member, board, parent, "대댓글내용", true);
+        parent.getChildren().add(child);
+
+        commentRepository.save(parent);
+        commentRepository.save(child);
+        FindCommentsServiceDto dto = new FindCommentsServiceDto(member.getId(), board.getId());
+
+        // when
+        CommentsResponse comments = commentService.findComments(dto);
+
+        // then
+        assertAll(
+                () -> assertThat(comments.getCount()).isEqualTo(1),
+                () -> assertThat(comments.getComments().get(0).getWriter()).isEqualTo(member.getNickname()),
+                () -> assertThat(comments.getComments().get(0).getContent()).isNull(),
+                () -> assertThat(comments.getComments().get(0).getReplies().size()).isEqualTo(1),
+                () -> assertThat(comments.getComments().get(0).getReplies().get(0).getContent()).isNull()
+        );
     }
 }
