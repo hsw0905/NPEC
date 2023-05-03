@@ -23,19 +23,19 @@ public class BoardGetResponse {
     private String title;
     private String content;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime modifiedAt;
 
-    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags,String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags,String title, String content, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;
         this.memberResponse = memberResponse;
         this.hashtags = hashtags;
         this.title = title;
         this.content = content;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.modifiedAt = modifiedAt;
     }
 
     public static BoardGetResponse of(Board board, List<HashTag> hashTags) {
-        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags),board.getTitle(), board.getContent(), board.getCreatedAt(), board.getUpdatedAt());
+        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags),board.getTitle(), board.getContent(), board.getCreatedAt(), board.getModifiedAt());
     }
 }
