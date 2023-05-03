@@ -94,6 +94,7 @@ public class BoardService {
         verifyMember(findMember, findBoard.getMember());
 
         findBoard.update(request.getTitle(), request.getContent());
+        hashTagService.updateHashTags(findBoard, request.getHashTags());
     }
 
     @Transactional

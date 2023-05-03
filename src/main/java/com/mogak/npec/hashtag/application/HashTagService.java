@@ -7,7 +7,10 @@ import com.mogak.npec.hashtag.dto.HashTagListResponse;
 import com.mogak.npec.hashtag.repository.BoardHashTagRepository;
 import com.mogak.npec.hashtag.repository.HashTagRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +28,10 @@ public class HashTagService {
     public void createHashTags(Board board, List<String> tagNames) {
         List<HashTag> hashTags = saveOrGetHashTags(tagNames);
 
+        saveBoardHashTags(board, hashTags);
+    }
+
+    private void saveBoardHashTags(Board board, Collection<HashTag> hashTags) {
         hashTags.stream()
                 .map(hashTag -> new BoardHashTag(board, hashTag))
                 .forEach(boardHashTagRepository::save);
@@ -56,9 +63,52 @@ public class HashTagService {
                 ).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public HashTagListResponse searchWithName(String name) {
         List<HashTag> findHashTags = hashTagRepository.findAllByNameStartsWith(name.trim());
 
         return HashTagListResponse.of(findHashTags);
+    }
+
+    @Transactional
+    public void updateHashTags(Board board, List<String> tagNames) {
+        List<HashTag> hashTags = saveOrGetHashTags(tagNames);
+
+        List<HashTag> findHashTags = getHashTags(board.getId());
+
+        updateBoardHashTagMapping(hashTags, findHashTags, board);
+    }
+
+    private void updateBoardHashTagMapping(List<HashTag> hashTags, List<HashTag> findHashTags, Board board) {
+        HashSet<HashTag> newTags = new HashSet<>(hashTags);
+        HashSet<HashTag> oldTags = new HashSet<>(findHashTags);
+
+        if (newTags.containsAll(oldTags) && newTags.size() == oldTags.size()) {
+            return;
+        }
+
+        deleteBoardHashTagFromOldHashTag(board, newTags, oldTags);
+        saveBoardHashTagFromNewHashTag(board, newTags, oldTags);
+    }
+
+    private void deleteBoardHashTagFromOldHashTag(Board board, HashSet<HashTag> newTags, HashSet<HashTag> oldTags) {
+        HashSet<HashTag> hashTagsForDelete = new HashSet<>();
+        for (HashTag oldTag : oldTags) {
+            if (!newTags.contains(oldTag)) {
+                hashTagsForDelete.add(oldTag);
+            }
+        }
+
+        boardHashTagRepository.deleteByBoardIdAndHashTagIdIn(board, hashTagsForDelete);
+    }
+
+    private void saveBoardHashTagFromNewHashTag(Board board, HashSet<HashTag> newTags, HashSet<HashTag> oldTags) {
+        HashSet<HashTag> hashTagsForSave = new HashSet<>();
+        for (HashTag newTag : newTags) {
+            if (!oldTags.contains(newTag)) {
+                hashTagsForSave.add(newTag);
+            }
+        }
+        saveBoardHashTags(board, hashTagsForSave);
     }
 }
