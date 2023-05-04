@@ -15,18 +15,16 @@ public class BoardResponse {
     private MemberResponse member;
 
     private String title;
-    private String content;
     private LocalDateTime createdAt;
 
-    public BoardResponse(Long id, MemberResponse member, String title, String content, LocalDateTime createdAt) {
+    public BoardResponse(Long id, MemberResponse member, String title, LocalDateTime createdAt) {
         this.id = id;
         this.member = member;
         this.title = title;
-        this.content = content;
         this.createdAt = createdAt;
     }
 
     public static BoardResponse of(Board board) {
-        return new BoardResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getContent(), board.getCreatedAt());
+        return new BoardResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getCreatedAt());
     }
 }

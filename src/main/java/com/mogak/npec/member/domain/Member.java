@@ -32,6 +32,8 @@ public class Member extends BaseEntity {
 
     private boolean isOut;
 
+    private String imageUrl;
+
     public Member(String nickname, String email, String password) {
         this.nickname = nickname;
         this.email = email;
@@ -40,5 +42,14 @@ public class Member extends BaseEntity {
 
     public boolean match(Member targetMember) {
         return this.equals(targetMember);
+    }
+
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

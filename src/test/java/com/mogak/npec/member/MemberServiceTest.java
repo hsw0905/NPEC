@@ -5,6 +5,7 @@ import com.mogak.npec.auth.domain.EncryptorImpl;
 import com.mogak.npec.member.application.MemberService;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.dto.MemberCreateRequest;
+import com.mogak.npec.member.dto.MemberUpdateRequest;
 import com.mogak.npec.member.exception.MemberAlreadySavedException;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -64,5 +65,20 @@ class MemberServiceTest {
         // then
         assertThatThrownBy(() -> memberService.createMember(request))
                 .isInstanceOf(MemberAlreadySavedException.class);
+    }
+
+    @DisplayName("멤버 수정을 요청하면 닉네임이 수정된다.")
+    @Test
+    void updateMemberNickname() {
+        // given
+        Member member = memberRepository.save(new Member("kim", "kim@d.com", "1234"));
+        MemberUpdateRequest request = new MemberUpdateRequest(1L, "updateNickname");
+
+        // when
+        memberService.updateMember(member.getId(), request.getNickname());
+
+        // then
+        Member findMember = memberRepository.findById(member.getId()).get();
+        assertThat(findMember.getNickname()).isEqualTo("updateNickname");
     }
 }
