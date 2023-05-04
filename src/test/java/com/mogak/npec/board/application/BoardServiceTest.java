@@ -4,6 +4,7 @@ import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
@@ -239,5 +240,27 @@ class BoardServiceTest {
         // when
         assertThatThrownBy(() -> boardService.cancelLikeBoard(savedBoard.getId(), member.getId()))
                 .isInstanceOf(MemberNotLikeBoardException.class);
+    }
+
+    @DisplayName("검색하면 검색 조건에 맞는 게시판 목록이 조회된다.")
+    @Test
+    void searchBoardsWithSuccess() {
+        // given
+        Board board1 = boardRepository.save(new Board(member, "안녕하세요 spring 질문 있습니다.", "너무 재밌어요 ^^"));
+        Board board2 = boardRepository.save(new Board(member, "안녕하세요", "어렵긴한데 spring 할만해요!"));
+        boardRepository.save(new Board(member, "안녕하세요", "출석체크!"));
+
+        // when
+        BoardListResponse response = boardService.searchBoard("spring", PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        // then
+        List<BoardResponse> searchBoards = response.getBoardResponses();
+        assertAll(
+                () -> assertThat(response.getTotalPageCount()).isEqualTo(1),
+
+                () -> assertThat(searchBoards.size()).isEqualTo(2),
+                () -> assertThat(searchBoards.get(0).getId()).isEqualTo(board2.getId()),
+                () -> assertThat(searchBoards.get(1).getId()).isEqualTo(board1.getId())
+        );
     }
 }

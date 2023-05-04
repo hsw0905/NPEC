@@ -150,7 +150,6 @@ public class BoardService {
 
     }
 
-
     @Transactional
     public void cancelLikeBoard(Long boardId, Long memberId) {
         Member findMember = findMember(memberId);
@@ -161,5 +160,11 @@ public class BoardService {
 
         boardLikeRepository.delete(boardLike);
         findBoard.decreaseLikeCount();
+    }
+
+    @Transactional(readOnly = true)
+    public BoardListResponse searchBoard(String query, Pageable pageable) {
+        Page<Board> boards = boardRepository.searchBoard(query, pageable);
+        return BoardListResponse.of(boards);
     }
 }
