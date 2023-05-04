@@ -15,18 +15,22 @@ public class BoardResponse {
     private MemberResponse member;
 
     private String title;
-    private String content;
+    private Long viewCount;
+    private Long likeCount;
+    // todo 댓글 개수 추가
+
     private LocalDateTime createdAt;
 
-    public BoardResponse(Long id, MemberResponse member, String title, String content, LocalDateTime createdAt) {
+    public BoardResponse(Long id, MemberResponse member, String title, Long viewCount, Long likeCount, LocalDateTime createdAt) {
         this.id = id;
         this.member = member;
         this.title = title;
-        this.content = content;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
         this.createdAt = createdAt;
     }
 
     public static BoardResponse of(Board board) {
-        return new BoardResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getContent(), board.getCreatedAt());
+        return new BoardResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getViewCount(), board.getLikeCount(), board.getCreatedAt());
     }
 }

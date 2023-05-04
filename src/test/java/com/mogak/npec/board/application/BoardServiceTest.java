@@ -85,8 +85,10 @@ class BoardServiceTest {
                 () -> assertThat(findBoard.getContent()).isEqualTo(savedBoard.getContent()),
                 () -> assertThat(findBoard.getMemberResponse().getId()).isEqualTo(savedBoard.getMember().getId()),
                 () -> assertThat(findBoard.getMemberResponse().getNickname()).isEqualTo(savedBoard.getMember().getNickname()),
-                () -> assertThat(findBoard.getUpdatedAt()).isEqualTo(savedBoard.getUpdatedAt()),
-                () -> assertThat(findBoard.getCreatedAt()).isEqualTo(savedBoard.getUpdatedAt())
+                () -> assertThat(findBoard.getViewCount()).isEqualTo(1L),
+                () -> assertThat(findBoard.getLikeCount()).isEqualTo(savedBoard.getLikeCount()),
+                () -> assertThat(findBoard.getModifiedAt()).isEqualTo(savedBoard.getModifiedAt()),
+                () -> assertThat(findBoard.getCreatedAt()).isEqualTo(savedBoard.getCreatedAt())
         );
     }
 

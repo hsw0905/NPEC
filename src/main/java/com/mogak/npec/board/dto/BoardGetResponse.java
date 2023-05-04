@@ -16,19 +16,25 @@ public class BoardGetResponse {
 
     private String title;
     private String content;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    public BoardGetResponse(Long id, MemberResponse memberResponse, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private Long viewCount;
+    private Long likeCount;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
+
+    public BoardGetResponse(Long id, MemberResponse memberResponse, String title, String content, Long viewCount, Long likeCount, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;
         this.memberResponse = memberResponse;
         this.title = title;
         this.content = content;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.modifiedAt = modifiedAt;
     }
 
     public static BoardGetResponse of(Board board) {
-        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getContent(), board.getCreatedAt(), board.getUpdatedAt());
+        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), board.getTitle(), board.getContent(), board.getViewCount(), board.getLikeCount(), board.getCreatedAt(), board.getModifiedAt());
     }
 }
