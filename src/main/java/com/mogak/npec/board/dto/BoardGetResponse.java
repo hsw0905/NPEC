@@ -22,20 +22,26 @@ public class BoardGetResponse {
 
     private String title;
     private String content;
+
+    private Long viewCount;
+    private Long likeCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
-    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags,String title, String content, LocalDateTime createdAt, LocalDateTime modifiedAt) {
+    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags, String title, String content, Long viewCount, Long likeCount, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;
         this.memberResponse = memberResponse;
         this.hashtags = hashtags;
         this.title = title;
         this.content = content;
+        this.viewCount = viewCount;
+        this.likeCount = likeCount;
         this.createdAt = createdAt;
         this.modifiedAt = modifiedAt;
     }
 
     public static BoardGetResponse of(Board board, List<HashTag> hashTags) {
-        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags),board.getTitle(), board.getContent(), board.getCreatedAt(), board.getModifiedAt());
+        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags), board.getTitle(), board.getContent(), board.getViewCount(), board.getLikeCount(), board.getCreatedAt(), board.getModifiedAt());
     }
 }

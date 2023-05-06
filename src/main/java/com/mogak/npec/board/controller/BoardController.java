@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,6 +53,12 @@ public class BoardController {
     @GetMapping(value = "/{boardId}")
     public ResponseEntity<BoardGetResponse> getBoard(@PathVariable Long boardId) {
         BoardGetResponse response = boardService.getBoard(boardId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<BoardListResponse> searchBoards(@RequestParam("query") String query, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        BoardListResponse response = boardService.searchBoard(query, pageable);
         return ResponseEntity.ok(response);
     }
 
