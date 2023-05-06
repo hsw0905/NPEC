@@ -11,7 +11,7 @@ import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
 import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
 import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
-import com.mogak.npec.board.repository.BoardViewRepository;
+import com.mogak.npec.hashtag.repository.BoardHashTagRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,9 +41,9 @@ class BoardServiceTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private BoardViewRepository boardViewRepository;
-    @Autowired
     private BoardLikeRepository boardLikeRepository;
+    @Autowired
+    private BoardHashTagRepository boardHashTagRepository;
 
     private Board savedBoard;
     private Member member;
@@ -50,11 +52,12 @@ class BoardServiceTest {
     void setUp() {
         member = memberRepository.save(new Member("kim coding", "npec@npec.com", "1234"));
         savedBoard = boardRepository.save(new Board(member, "제목1", "내용1"));
+
     }
 
     @AfterEach
     void tearDown() {
-        boardViewRepository.deleteAll();
+        boardHashTagRepository.deleteAll();
         boardLikeRepository.deleteAll();
         boardRepository.deleteAll();
     }
@@ -84,8 +87,8 @@ class BoardServiceTest {
                 () -> assertThat(findBoard.getContent()).isEqualTo(savedBoard.getContent()),
                 () -> assertThat(findBoard.getMemberResponse().getId()).isEqualTo(savedBoard.getMember().getId()),
                 () -> assertThat(findBoard.getMemberResponse().getNickname()).isEqualTo(savedBoard.getMember().getNickname()),
-                () -> assertThat(findBoard.getUpdatedAt()).isEqualTo(savedBoard.getUpdatedAt()),
-                () -> assertThat(findBoard.getCreatedAt()).isEqualTo(savedBoard.getUpdatedAt())
+                () -> assertThat(findBoard.getModifiedAt()).isEqualTo(savedBoard.getModifiedAt()),
+                () -> assertThat(findBoard.getCreatedAt()).isEqualTo(savedBoard.getCreatedAt())
         );
     }
 
@@ -107,21 +110,27 @@ class BoardServiceTest {
     }
 
     @DisplayName("게시판 수정을 요청하면 수정된다.")
+    @Transactional
     @Test
     void updateBoardWithSuccess() {
         // given
-        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+        List<String> requestHashTags = List.of("java", "spring", "python");
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용", requestHashTags);
 
         // when
         boardService.updateBoard(savedBoard.getId(), member.getId(), request);
 
         // then
         Board findBoard = boardRepository.findById(savedBoard.getId()).get();
+        List<String> hashTangNames = boardHashTagRepository.findAllByBoardId(findBoard.getId())
+                .stream()
+                .map(boardHashTag -> boardHashTag.getHashTag().getName()).toList();
 
         assertAll(
                 () -> assertThat(findBoard.getTitle()).isEqualTo(request.getTitle()),
                 () -> assertThat(findBoard.getContent()).isEqualTo(request.getContent()),
-                () -> assertThat(findBoard.getModifiedAt()).isNotNull()
+                () -> assertThat(findBoard.getModifiedAt()).isNotNull(),
+                () -> assertThat(hashTangNames).containsAll(requestHashTags)
         );
     }
 
@@ -130,7 +139,7 @@ class BoardServiceTest {
     void updateBoardWithFail() {
         // given
         Member otherMember = memberRepository.save(new Member("kim update", "update@npec.com", "1234"));
-        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용", new ArrayList<>());
 
         assertThatThrownBy(
                 () -> boardService.updateBoard(savedBoard.getId(), otherMember.getId(), request)
@@ -142,7 +151,7 @@ class BoardServiceTest {
     @Test
     void updateBoardWithDeletedBoard() {
         Board deletedBoard = boardRepository.save(new Board(member, "수정 전 제목", "수정 전 내용", true));
-        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용");
+        BoardUpdateRequest request = new BoardUpdateRequest("수정 후 제목", "수정 후 내용", new ArrayList<>());
 
         assertThatThrownBy(
                 () -> boardService.updateBoard(deletedBoard.getId(), member.getId(), request)

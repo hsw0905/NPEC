@@ -2,10 +2,13 @@ package com.mogak.npec.board.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.hashtag.domain.HashTag;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class BoardListResponse {
@@ -18,9 +21,9 @@ public class BoardListResponse {
         this.totalPageCount = totalPageCount;
     }
 
-    public static BoardListResponse of(Page<Board> boards) {
+    public static BoardListResponse of(Page<Board> boards, Map<Long, List<HashTag>> hashTagsByBoardId) {
         List<BoardResponse> boardResponses = boards.stream()
-                .map(BoardResponse::of)
+                .map(board -> BoardResponse.of(board, hashTagsByBoardId.getOrDefault(board.getId(), new ArrayList<>())))
                 .toList();
 
         return new BoardListResponse(boardResponses, boards.getTotalPages());
