@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardCreateRequest {
@@ -15,4 +17,6 @@ public class BoardCreateRequest {
 
     @NotBlank
     private String content;
+
+    private List<String> hashTags;
 }
