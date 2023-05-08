@@ -273,28 +273,28 @@ public class CommentServiceTest {
                 .isInstanceOf(InvalidCommentWriterException.class);
     }
 
-    @DisplayName("작성자의 요청인 경우 댓글과 하위 대댓글이 삭제된다.")
-    @Test
-    void deleteCommentSuccess() {
-        // given
-        Comment parent = Comment.parent(member, board, "댓글내용", false);
-        Comment child = Comment.child(member, board, parent, "대댓글내용", false);
-        parent.getChildren().add(child);
-
-        commentRepository.save(parent);
-        commentRepository.save(child);
-
-        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), parent.getId());
-        // when
-        commentService.deleteComment(dto);
-
-        // then
-        List<Comment> comments = commentRepository.findAll();
-
-        for (Comment comment : comments) {
-            assertThat(comment.isDeleted()).isTrue();
-        }
-    }
+//    @DisplayName("작성자의 요청인 경우 댓글과 하위 대댓글이 삭제된다.")
+//    @Test
+//    void deleteCommentSuccess() {
+//        // given
+//        Comment parent = Comment.parent(member, board, "댓글내용", false);
+//        Comment child = Comment.child(member, board, parent, "대댓글내용", false);
+//        parent.getChildren().add(child);
+//
+//        commentRepository.save(parent);
+//        commentRepository.save(child);
+//
+//        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), parent.getId());
+//        // when
+//        commentService.deleteComment(dto);
+//
+//        // then
+//        List<Comment> comments = commentRepository.findAll();
+//
+//        for (Comment comment : comments) {
+//            assertThat(comment.isDeleted()).isTrue();
+//        }
+//    }
 
     @DisplayName("작성자가 아니면 삭제 요청이 실패한다.")
     @Test

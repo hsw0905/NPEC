@@ -13,6 +13,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,9 +47,10 @@ public class BoardController {
     }
 
     @GetMapping
-    public ResponseEntity<BoardListResponse> getBoards(@PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        BoardListResponse response = boardService.getBoards(pageable);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<BoardListResponse> getBoards(@Validated BindingResult String) {
+//        BoardListResponse response = boardService.getBoards(pageable);
+//        return ResponseEntity.ok(response);
+        return null;
     }
 
     @GetMapping(value = "/{boardId}")
