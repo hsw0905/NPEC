@@ -41,7 +41,7 @@ public class Board extends BaseEntity {
 
     @Column(name = "view_count")
     private Long viewCount = 0L;
-
+    // 역정규화 Column
     @Column(name = "like_count")
     private Long likeCount = 0L;
 

@@ -19,7 +19,7 @@ public class CommentController {
     @PostMapping("/boards/{boardId}/comments")
     public ResponseEntity<Void> createComment(@PathVariable Long boardId, @ValidToken Long memberId,
                                               @Valid @RequestBody CommentCreateRequest request) {
-
+        // ServiceDto 굳이?
         commentService.createComment(new CreateCommentServiceDto(memberId, boardId, request.getContent()));
 
         return ResponseEntity.status(HttpStatus.CREATED).build();

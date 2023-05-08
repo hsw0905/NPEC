@@ -70,5 +70,6 @@ public class Comment extends BaseEntity {
 
     public void deleteComment() {
         isDeleted = true;
+        member = null;
     }
 }
