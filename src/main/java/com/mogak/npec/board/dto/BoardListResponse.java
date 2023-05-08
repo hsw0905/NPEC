@@ -2,6 +2,7 @@ package com.mogak.npec.board.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
 import com.mogak.npec.hashtag.domain.HashTag;
 import lombok.Getter;
 
@@ -20,9 +21,9 @@ public class BoardListResponse {
         this.totalPageCount = totalPageCount;
     }
 
-    public static BoardListResponse of(List<Board> boards, Map<Long, List<HashTag>> hashTagsByBoardId, int totalPages) {
+    public static BoardListResponse of(List<Board> boards, Map<Long, BoardSort> boardsortsByBoardId, Map<Long, List<HashTag>> hashTagsByBoardId, int totalPages) {
         List<BoardResponse> boardResponses = boards.stream()
-                .map(board -> BoardResponse.of(board, hashTagsByBoardId.getOrDefault(board.getId(), new ArrayList<>())))
+                .map(board -> BoardResponse.of(board, boardsortsByBoardId.get(board.getId()), hashTagsByBoardId.getOrDefault(board.getId(), new ArrayList<>())))
                 .toList();
 
         return new BoardListResponse(boardResponses, totalPages);

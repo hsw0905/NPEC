@@ -143,16 +143,22 @@ class BoardServiceTest {
     @DisplayName("게시판 상세조회를 요청하면 조회된다.")
     @Test
     void getBoardWithSuccess() {
+        // given
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 2L, 1L, 3L));
+
+        // when
         BoardGetResponse findBoard = boardService.getBoard(savedBoard.getId());
 
+        // then
         assertAll(
                 () -> assertThat(findBoard.getId()).isEqualTo(savedBoard.getId()),
                 () -> assertThat(findBoard.getTitle()).isEqualTo(savedBoard.getTitle()),
                 () -> assertThat(findBoard.getContent()).isEqualTo(savedBoard.getContent()),
                 () -> assertThat(findBoard.getMemberResponse().getId()).isEqualTo(savedBoard.getMember().getId()),
                 () -> assertThat(findBoard.getMemberResponse().getNickname()).isEqualTo(savedBoard.getMember().getNickname()),
-                () -> assertThat(findBoard.getViewCount()).isEqualTo(1L),
-                () -> assertThat(findBoard.getLikeCount()).isEqualTo(savedBoard.getLikeCount()),
+                () -> assertThat(findBoard.getViewCount()).isEqualTo(boardSort.getViewCount() + 1L),
+                () -> assertThat(findBoard.getLikeCount()).isEqualTo(boardSort.getLikeCount()),
+                () -> assertThat(findBoard.getCommentCount()).isEqualTo(boardSort.getCommentCount()),
                 () -> assertThat(findBoard.getModifiedAt()).isEqualTo(savedBoard.getModifiedAt()),
                 () -> assertThat(findBoard.getCreatedAt()).isEqualTo(savedBoard.getCreatedAt())
         );
@@ -161,10 +167,15 @@ class BoardServiceTest {
     @DisplayName("게시판 상세조회를 요청하면 조회수가 증가한다.")
     @Test
     void getBoardWithIncreaseCount() {
+        // given
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 2L, 1L, 3L));
+
+        // when
         boardService.getBoard(savedBoard.getId());
 
-        Long viewCount = boardRepository.findById(savedBoard.getId()).get().getViewCount();
-        assertThat(viewCount).isEqualTo(1L);
+        // then
+        Long viewCount = boardSortRepository.findById(boardSort.getId()).get().getViewCount();
+        assertThat(viewCount).isEqualTo(2L);
     }
 
     @DisplayName("저장되지 않은 게시판 Id로 상세조회를 요청하면 예외를 던진다.")
@@ -261,6 +272,7 @@ class BoardServiceTest {
     @Test
     void likeBoardSuccess() {
         // given
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 0L, 1L, 0L));
         Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
 
         // when
@@ -268,10 +280,10 @@ class BoardServiceTest {
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        List<Board> boards = boardRepository.findAll();
+        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
 
         assertThat(boardLikes.size()).isEqualTo(1);
-        assertThat(boards.get(0).getLikeCount()).isEqualTo(1);
+        assertThat(likeCount).isEqualTo(1L);
     }
 
     @DisplayName("같은 사용자가 동일 게시물에 대해 중복 추천 시 익셉션을 던진다.")
@@ -279,6 +291,7 @@ class BoardServiceTest {
     void throwExceptionWhenDuplicatedLike() {
         // given
         Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+        boardSortRepository.save(new BoardSort(savedBoard, 0L, 1L, 0L));
         boardService.likeBoard(savedBoard.getId(), newMember.getId());
 
         // when then
@@ -291,6 +304,7 @@ class BoardServiceTest {
     void cancelLikeBoardSuccess() {
         // given
         Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 0L, 1L, 0L));
         boardService.likeBoard(savedBoard.getId(), newMember.getId());
 
         // when
@@ -298,20 +312,15 @@ class BoardServiceTest {
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        List<Board> boards = boardRepository.findAll();
+        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
 
         assertThat(boardLikes.size()).isEqualTo(0);
-        assertThat(boards.get(0).getLikeCount()).isEqualTo(0);
+        assertThat(likeCount).isEqualTo(0);
     }
 
     @DisplayName("추천을 하지 않은 사용자가 추천 취소 요청이 올 경우 익셉션을 던진다.")
     @Test
     void throwExceptionWhenMemberWhoNotCanceledLikeDoCancel() {
-        // given
-        Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
-        boardService.likeBoard(savedBoard.getId(), newMember.getId());
-
-        // when
         assertThatThrownBy(() -> boardService.cancelLikeBoard(savedBoard.getId(), member.getId()))
                 .isInstanceOf(MemberNotLikeBoardException.class);
     }

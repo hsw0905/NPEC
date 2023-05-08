@@ -39,12 +39,6 @@ public class Board extends BaseEntity {
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
-    @Column(name = "view_count")
-    private Long viewCount = 0L;
-    // 역정규화 Column
-    @Column(name = "like_count")
-    private Long likeCount = 0L;
-
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
@@ -69,19 +63,5 @@ public class Board extends BaseEntity {
 
     public void delete() {
         this.isDeleted = true;
-    }
-
-    public void increaseViewCount() {
-        this.viewCount++;
-    }
-
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
     }
 }
