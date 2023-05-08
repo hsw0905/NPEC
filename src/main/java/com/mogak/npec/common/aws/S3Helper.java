@@ -37,7 +37,7 @@ public class S3Helper {
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(multipartFile.getBytes()));
             return true;
         } catch (IOException e) {
-            log.error("[S3Helper][uploadImage] - bucket: " + bucketName + ", fileName: " + imageName + " error : " + e.getMessage());
+            log.error("bucket: " + bucketName + ", fileName: " + imageName + " error : " + e.getMessage());
         }
 
         return false;

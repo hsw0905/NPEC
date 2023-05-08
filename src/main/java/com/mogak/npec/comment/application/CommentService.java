@@ -109,28 +109,22 @@ public class CommentService {
     }
 
     private CommentResponse toCommentResponse(Comment comment) {
-        List<ReplyResponse> replies;
-        if (!comment.getChildren().isEmpty()) {
-            replies = comment.getChildren().stream().map(this::toReplyResponse).collect(Collectors.toList());
-        } else {
-            replies = new ArrayList<>();
-        }
+        List<ReplyResponse> replies = getReplyResponses(comment);
 
-        if (comment.isDeleted()) {
-            return new CommentResponse(comment.getId(), comment.getMember().getNickname(), null,
-                    replies, comment.getCreatedAt(), comment.getUpdatedAt());
+        return CommentResponse.of(comment, replies);
+    }
+
+    private List<ReplyResponse> getReplyResponses(Comment comment) {
+        if (comment.getChildren().isEmpty()) {
+            return new ArrayList<>();
         }
-        return new CommentResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
-                replies, comment.getCreatedAt(), comment.getUpdatedAt());
+        return comment.getChildren().stream()
+                .map(this::toReplyResponse)
+                .collect(Collectors.toList());
     }
 
     private ReplyResponse toReplyResponse(Comment comment) {
-        if (comment.isDeleted()) {
-            return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), null,
-                    comment.getCreatedAt(), comment.getUpdatedAt());
-        }
-        return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
-                comment.getCreatedAt(), comment.getUpdatedAt());
+        return ReplyResponse.of(comment);
     }
 
     @Transactional
@@ -157,22 +151,10 @@ public class CommentService {
     public void deleteComment(DeleteCommentServiceDto dto) {
         Comment comment = findComment(dto.commentId());
         Member writer = comment.getMember();
-        List<Comment> children = comment.getChildren();
 
         verifyComment(comment);
         verifyWriter(writer, dto.memberId());
 
-        if (comment.isParent()) {
-            deleteChild(children);
-        }
-
         comment.deleteComment();
     }
-
-    private void deleteChild(List<Comment> children) {
-        children.stream().filter(child -> !child.isDeleted())
-                .forEach(Comment::deleteComment);
-    }
-
-
 }

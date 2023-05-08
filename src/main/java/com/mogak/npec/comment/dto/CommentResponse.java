@@ -1,5 +1,6 @@
 package com.mogak.npec.comment.dto;
 
+import com.mogak.npec.comment.domain.Comment;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -14,13 +15,22 @@ public class CommentResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public CommentResponse(Long id, String writer, String content, List<ReplyResponse> replies, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private CommentResponse(Long id, String writer, String content, List<ReplyResponse> replies, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.writer = writer;
         this.content = content;
         this.replies = replies;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public static CommentResponse of(Comment comment, List<ReplyResponse> replies) {
+        if (comment.isDeleted()) {
+            return new CommentResponse(comment.getId(), comment.getMember().getNickname(), null,
+                    replies, comment.getCreatedAt(), comment.getUpdatedAt());
+        }
+        return new CommentResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),
+                replies, comment.getCreatedAt(), comment.getUpdatedAt());
     }
 
 }
