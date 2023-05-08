@@ -8,9 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface BoardRepository extends JpaRepository<Board, Long> {
     Page<Board> findAllByIsDeletedFalse(Pageable pageable);
 
     @Query("select b from Board b where b.content like %:query% or b.title like %:query%")
     Page<Board> searchBoard(@Param("query") String query, Pageable pageable);
+
+    List<Board> findAllByIdIn(List<Long> boardIds);
 }

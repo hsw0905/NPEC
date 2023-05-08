@@ -2,6 +2,7 @@ package com.mogak.npec.board.application;
 
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
+import com.mogak.npec.board.domain.BoardSort;
 import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardImageResponse;
@@ -13,6 +14,7 @@ import com.mogak.npec.board.exceptions.MemberAlreadyLikeBoardException;
 import com.mogak.npec.board.exceptions.MemberNotLikeBoardException;
 import com.mogak.npec.board.repository.BoardLikeRepository;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardSortRepository;
 import com.mogak.npec.common.aws.S3Helper;
 import com.mogak.npec.hashtag.application.HashTagService;
 import com.mogak.npec.hashtag.domain.HashTag;
@@ -40,14 +42,16 @@ public class BoardService {
     private final S3Helper s3Helper;
     private final BoardLikeRepository boardLikeRepository;
     private final HashTagService hashTagService;
+    private final BoardSortRepository boardSortRepository;
 
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService, BoardSortRepository boardSortRepository) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
         this.boardLikeRepository = boardLikeRepository;
         this.hashTagService = hashTagService;
+        this.boardSortRepository = boardSortRepository;
     }
 
     @Transactional
@@ -65,13 +69,23 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardListResponse getBoards(Pageable pageable) {
-        Page<Board> boards = boardRepository.findAllByIsDeletedFalse(pageable);
+    public BoardListResponse getBoards(Pageable pageable) { // todo sort 필드 제한하기
+        Page<BoardSort> boardSorts = boardSortRepository.findAll(pageable);
+        List<Long> boardIds = boardSorts.getContent().stream()
+                .map(boardSort -> boardSort.getBoard().getId())
+                .toList();
 
-        List<Long> boardIds = boards.stream().map(Board::getId).collect(Collectors.toList());
+        List<Board> boards = boardRepository.findAllByIdIn(boardIds);
+        Map<Long, Board> boardByBoardId = boards.stream()
+                .collect(Collectors.toMap(Board::getId, board -> board));
+
+        List<Board> sortedBoard = boardIds.stream()
+                .map(boardByBoardId::get)
+                .toList();
+
         Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
 
-        return BoardListResponse.of(boards, hashTagsByBoardId);
+        return BoardListResponse.of(sortedBoard, hashTagsByBoardId, boardSorts.getTotalPages());
     }
 
     @Transactional
@@ -182,6 +196,7 @@ public class BoardService {
         List<Long> boardIds = boards.stream().map(Board::getId).collect(Collectors.toList());
         Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
 
-        return BoardListResponse.of(boards, hashTagsByBoardId);
+//        return BoardListResponse.of(boards, hashTagsByBoardId, boards.getTotalPages());
+        return null;
     }
 }
