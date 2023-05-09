@@ -1,9 +1,12 @@
 package com.mogak.npec.comment.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
+import com.mogak.npec.board.dto.BoardSortNotFoundException;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardSortRepository;
 import com.mogak.npec.comment.domain.Comment;
 import com.mogak.npec.comment.dto.*;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
@@ -26,11 +29,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
+    private final BoardSortRepository boardSortRepository;
 
-    public CommentService(CommentRepository commentRepository, BoardRepository boardRepository, MemberRepository memberRepository) {
+    public CommentService(CommentRepository commentRepository, BoardRepository boardRepository, MemberRepository memberRepository, BoardSortRepository boardSortRepository) {
         this.commentRepository = commentRepository;
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
+        this.boardSortRepository = boardSortRepository;
     }
 
     @Transactional
@@ -41,8 +46,11 @@ public class CommentService {
         verifyBoard(board);
 
         Comment comment = Comment.parent(member, board, dto.content(), false);
-
         commentRepository.save(comment);
+
+        BoardSort boardSort = findBoardSort(board.getId());
+        boardSortRepository.updateCommentCount(boardSort);
+
     }
 
     @Transactional
@@ -56,8 +64,10 @@ public class CommentService {
         verifyBoard(board);
 
         Comment child = Comment.child(member, board, parent, dto.content(), false);
-
         commentRepository.save(child);
+
+        BoardSort boardSort = findBoardSort(board.getId());
+        boardSortRepository.updateCommentCount(boardSort);
     }
 
     private void verifyParent(Comment parent) {
@@ -86,6 +96,12 @@ public class CommentService {
     private Comment findComment(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("댓글을 찾을 수 없습니다."));
+    }
+
+    private BoardSort findBoardSort(Long boardId) {
+        return boardSortRepository.findByBoardId(boardId).orElseThrow(
+                () -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다.")
+        );
     }
 
     private void verifyComment(Comment findComment) {

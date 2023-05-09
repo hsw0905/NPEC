@@ -198,10 +198,9 @@ public class BoardService {
     }
 
     private BoardSort findBoardSort(Long boardId) {
-        BoardSort boardSort = boardSortRepository.findByBoardId(boardId).orElseThrow(
+        return boardSortRepository.findByBoardId(boardId).orElseThrow(
                 () -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다.")
         );
-        return boardSort;
     }
 
     @Transactional(readOnly = true)

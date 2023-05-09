@@ -20,4 +20,5 @@ public class CommentQueryRepositoryImpl implements CommentQueryRepository {
                 .where(comment.board.id.eq(boardId).and(comment.parent.isNull()))
                 .fetch();
     }
+
 }
