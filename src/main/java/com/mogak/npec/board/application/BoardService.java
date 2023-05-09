@@ -7,6 +7,7 @@ import com.mogak.npec.board.dto.BoardCreateRequest;
 import com.mogak.npec.board.dto.BoardGetResponse;
 import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
+import com.mogak.npec.board.dto.BoardSortNotFoundException;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
@@ -69,7 +70,7 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardListResponse getBoards(Pageable pageable) { // todo sort 필드 제한하기
+    public BoardListResponse getBoards(Pageable pageable) {
         Page<BoardSort> boardSorts = boardSortRepository.findAll(pageable);
         List<Long> boardIds = boardSorts.getContent().stream()
                 .map(boardSort -> boardSort.getBoard().getId())
@@ -83,20 +84,24 @@ public class BoardService {
                 .map(boardByBoardId::get)
                 .toList();
 
+        Map<Long, BoardSort> boardSortsByBoardId = boardSorts.getContent().stream()
+                .collect(Collectors.toMap(boardSort -> boardSort.getBoard().getId(), boardSort -> boardSort));
+
         Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
 
-        return BoardListResponse.of(sortedBoard, hashTagsByBoardId, boardSorts.getTotalPages());
+        return BoardListResponse.of(sortedBoard, boardSortsByBoardId, hashTagsByBoardId, boardSorts.getTotalPages());
     }
 
     @Transactional
     public BoardGetResponse getBoard(Long boardId) {
         Board findBoard = findBoard(boardId);
 
-        findBoard.increaseViewCount();
+        BoardSort boardSort = findBoardSort(boardId);
+        boardSort.increaseViewCount();
 
         List<HashTag> hashTags = hashTagService.getHashTags(findBoard.getId());
 
-        return BoardGetResponse.of(findBoard, hashTags);
+        return BoardGetResponse.of(findBoard, boardSort, hashTags);
     }
 
     @Transactional
@@ -173,8 +178,9 @@ public class BoardService {
             throw new MemberAlreadyLikeBoardException("이미 추천한 게시물 입니다.");
         }
         boardLikeRepository.save(new BoardLike(findMember, findBoard));
-        findBoard.increaseLikeCount();
 
+        BoardSort boardSort = findBoardSort(boardId);
+        boardSort.increaseLikeCount();
     }
 
     @Transactional
@@ -186,7 +192,16 @@ public class BoardService {
                 .orElseThrow(() -> new MemberNotLikeBoardException("사용자가 추천한 게시물이 아닙니다."));
 
         boardLikeRepository.delete(boardLike);
-        findBoard.decreaseLikeCount();
+
+        BoardSort boardSort = findBoardSort(boardId);
+        boardSort.decreaseLikeCount();
+    }
+
+    private BoardSort findBoardSort(Long boardId) {
+        BoardSort boardSort = boardSortRepository.findByBoardId(boardId).orElseThrow(
+                () -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다.")
+        );
+        return boardSort;
     }
 
     @Transactional(readOnly = true)

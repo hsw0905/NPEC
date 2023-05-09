@@ -10,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ControllerErrorAdvice {
@@ -39,5 +40,13 @@ public class ControllerErrorAdvice {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.internalServerError().body(new ErrorResponse("서버 내부에 문제가 발생했습니다."));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        if (e.getName().equals("sort")) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("유효하지않은 sort 타입입니다."));
+        }
+        return ResponseEntity.internalServerError().body(new ErrorResponse(e.getMessage()));
     }
 }
