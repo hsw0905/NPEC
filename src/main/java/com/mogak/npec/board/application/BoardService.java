@@ -70,7 +70,7 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardListResponse getBoards(Pageable pageable) { // todo sort 필드 제한하기
+    public BoardListResponse getBoards(Pageable pageable) {
         Page<BoardSort> boardSorts = boardSortRepository.findAll(pageable);
         List<Long> boardIds = boardSorts.getContent().stream()
                 .map(boardSort -> boardSort.getBoard().getId())

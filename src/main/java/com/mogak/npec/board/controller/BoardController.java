@@ -8,13 +8,12 @@ import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,10 +46,10 @@ public class BoardController {
     }
 
     @GetMapping
-    public ResponseEntity<BoardListResponse> getBoards(@Validated BindingResult String) {
-//        BoardListResponse response = boardService.getBoards(pageable);
-//        return ResponseEntity.ok(response);
-        return null;
+    public ResponseEntity<BoardListResponse> getBoards(@RequestParam("page") int page, @RequestParam("sort") SortType sortType) {
+        PageRequest pageable = PageRequest.of(page, 10, Sort.by(sortType.getSortField()).descending());
+        BoardListResponse response = boardService.getBoards(pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/{boardId}")
