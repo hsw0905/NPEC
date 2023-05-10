@@ -14,10 +14,10 @@ public class BoardSortQueryRepositoryImpl implements BoardSortQueryRepository{
     }
 
     @Override
-    public void updateCommentCount(BoardSort entity) {
+    public void updateCommentCount(Long boardId) {
         queryFactory.update(boardSort)
                 .set(boardSort.commentCount, boardSort.commentCount.add(1))
-                .where(boardSort.id.eq(entity.getId()))
+                .where(boardSort.board.id.eq(boardId))
                 .execute();
     }
 }

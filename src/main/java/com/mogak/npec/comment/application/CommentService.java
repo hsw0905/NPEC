@@ -48,8 +48,7 @@ public class CommentService {
         Comment comment = Comment.parent(member, board, dto.content(), false);
         commentRepository.save(comment);
 
-        BoardSort boardSort = findBoardSort(board.getId());
-        boardSortRepository.updateCommentCount(boardSort);
+        boardSortRepository.updateCommentCount(board.getId());
 
     }
 
@@ -66,8 +65,7 @@ public class CommentService {
         Comment child = Comment.child(member, board, parent, dto.content(), false);
         commentRepository.save(child);
 
-        BoardSort boardSort = findBoardSort(board.getId());
-        boardSortRepository.updateCommentCount(boardSort);
+        boardSortRepository.updateCommentCount(board.getId());
     }
 
     private void verifyParent(Comment parent) {
