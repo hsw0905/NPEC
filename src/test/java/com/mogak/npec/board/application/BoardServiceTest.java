@@ -140,6 +140,31 @@ class BoardServiceTest {
         );
     }
 
+    @DisplayName("추천수 높은 수로 정렬한다.")
+    @Test
+    void getBoardsWithOrderByCommentCount() {
+        // given
+        Board board1 = boardRepository.save(new Board(member, "댓글수 1등", "내용"));
+        Board board2 = boardRepository.save(new Board(member, "댓글수 3등", "내용"));
+
+        boardSortRepository.save(new BoardSort(savedBoard, 0L, 0L, 10L));
+        boardSortRepository.save(new BoardSort(board1, 0L, 0L, 14L));
+        boardSortRepository.save(new BoardSort(board2, 0L, 0L, 9L));
+
+        PageRequest pageable = PageRequest.of(0, 3, Sort.by("commentCount").descending());
+
+        // when
+        BoardListResponse boards = boardService.getBoards(pageable);
+
+        // then
+        List<BoardResponse> boardResponses = boards.getBoardResponses();
+        assertAll(
+                () -> assertThat(boardResponses.get(0).getId()).isEqualTo(board1.getId()),
+                () -> assertThat(boardResponses.get(1).getId()).isEqualTo(savedBoard.getId()),
+                () -> assertThat(boardResponses.get(2).getId()).isEqualTo(board2.getId())
+        );
+    }
+
     @DisplayName("게시판 상세조회를 요청하면 조회된다.")
     @Test
     void getBoardWithSuccess() {
