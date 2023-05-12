@@ -61,10 +61,11 @@ public class BoardService {
                 .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
 
         Board board = new Board(member, request.getTitle(), request.getContent());
-
         Board savedBoard = boardRepository.save(board);
 
         hashTagService.createHashTags(savedBoard, request.getHashTags());
+
+        boardSortRepository.save(BoardSort.of(savedBoard));
 
         return savedBoard.getId();
     }
