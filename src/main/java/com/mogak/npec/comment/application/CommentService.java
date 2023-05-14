@@ -81,9 +81,8 @@ public class CommentService {
     }
 
     private Board findBoard(Long boardId) {
-        return boardRepository.findById(boardId).orElseThrow(
-                () -> new BoardNotFoundException("게시글을 찾을 수 없습니다.")
-        );
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
     }
 
     private Member findMember(Long memberId) {
@@ -97,9 +96,8 @@ public class CommentService {
     }
 
     private BoardSort findBoardSort(Long boardId) {
-        return boardSortRepository.findByBoardId(boardId).orElseThrow(
-                () -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다.")
-        );
+        return boardSortRepository.findByBoardId(boardId)
+                .orElseThrow(() -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다."));
     }
 
     private void verifyComment(Comment findComment) {
@@ -112,12 +110,10 @@ public class CommentService {
     public CommentsResponse findComments(FindCommentsServiceDto dto) {
         Board board = findBoard(dto.boardId());
 
-        List<CommentResponse> commentResponses = new ArrayList<>();
+        List<CommentResponse> commentResponses;
 
         List<Comment> parents = commentRepository.findParentsByBoardId(board.getId());
-        for (Comment parent : parents) {
-            commentResponses.add(toCommentResponse(parent));
-        }
+        commentResponses = parents.stream().map(this::toCommentResponse).collect(Collectors.toList());
 
         return new CommentsResponse(commentResponses);
     }
