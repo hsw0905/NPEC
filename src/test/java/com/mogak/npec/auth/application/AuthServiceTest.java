@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Date;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -72,8 +74,9 @@ class AuthServiceTest {
     @Test
     void logoutSuccess() {
         // given
-        String accessToken = tokenProvider.createAccessToken(1L);
-        String refreshToken = tokenProvider.createRefreshToken(1L);
+        Date issuedAt = new Date();
+        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
         authService.logout(TOKEN_PREFIX + accessToken, TOKEN_PREFIX + refreshToken);
@@ -86,7 +89,8 @@ class AuthServiceTest {
     @Test
     void logoutSuccessWithExpiredToken() {
         // given
-        String refreshToken = tokenProvider.createRefreshToken(1L);
+        Date issuedAt = new Date();
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
         authService.logout(EXPIRED_TOKEN, TOKEN_PREFIX + refreshToken);
@@ -107,7 +111,8 @@ class AuthServiceTest {
     @Test
     void refreshSuccess() {
         // given
-        String refreshToken = tokenProvider.createRefreshToken(1L);
+        Date issuedAt = new Date();
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
         RefreshResponse response = authService.refresh(TOKEN_PREFIX + refreshToken);
@@ -128,7 +133,8 @@ class AuthServiceTest {
     @Test
     void refreshFailWithBlacklistToken() {
         // given
-        String refreshToken = tokenProvider.createRefreshToken(1L);
+        Date issuedAt = new Date();
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
         blackListRepository.save(new BlackList(refreshToken, 20L));
 
         assertThatThrownBy(
