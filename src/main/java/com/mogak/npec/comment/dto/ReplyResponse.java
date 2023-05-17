@@ -23,7 +23,7 @@ public class ReplyResponse {
 
     public static ReplyResponse of(Comment comment) {
         if (comment.isDeleted()) {
-            return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), null,
+            return new ReplyResponse(comment.getId(), null, null,
                     comment.getCreatedAt(), comment.getUpdatedAt());
         }
         return new ReplyResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),

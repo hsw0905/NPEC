@@ -32,25 +32,23 @@ public class TokenProvider {
         this.jwtParser = Jwts.parserBuilder().setSigningKey(this.secretKey).build();
     }
 
-    public String createAccessToken(Long memberId) {
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + accessValidityMilliSeconds);
+    public String createAccessToken(Long memberId, Date issuedAt) {
+        Date expireDate = new Date(issuedAt.getTime() + accessValidityMilliSeconds);
 
         return Jwts.builder()
                 .claim("memberId", memberId)
-                .setIssuedAt(now)
+                .setIssuedAt(issuedAt)
                 .setExpiration(expireDate)
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String createRefreshToken(Long memberId) {
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + refreshValidityMilliSeconds);
+    public String createRefreshToken(Long memberId, Date issuedAt) {
+        Date expireDate = new Date(issuedAt.getTime() + refreshValidityMilliSeconds);
 
         return Jwts.builder()
                 .claim("memberId", memberId)
-                .setIssuedAt(now)
+                .setIssuedAt(issuedAt)
                 .setExpiration(expireDate)
                 .signWith(secretKey)
                 .compact();

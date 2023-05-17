@@ -15,6 +15,7 @@ import com.mogak.npec.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -92,11 +93,13 @@ public class AuthService {
     }
 
     private String createAccessToken(Long memberId) {
-        return tokenProvider.createAccessToken(memberId);
+        Date issuedAt = new Date();
+        return tokenProvider.createAccessToken(memberId, issuedAt);
     }
 
     private String createRefreshToken(Long memberId) {
-        return tokenProvider.createRefreshToken(memberId);
+        Date issuedAt = new Date();
+        return tokenProvider.createRefreshToken(memberId, issuedAt);
     }
 
 }

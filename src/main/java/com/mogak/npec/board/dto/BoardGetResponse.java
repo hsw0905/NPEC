@@ -2,6 +2,7 @@ package com.mogak.npec.board.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
 import com.mogak.npec.hashtag.domain.HashTag;
 import com.mogak.npec.hashtag.dto.HashTagListResponse;
 import com.mogak.npec.member.dto.MemberResponse;
@@ -25,11 +26,12 @@ public class BoardGetResponse {
 
     private Long viewCount;
     private Long likeCount;
+    private Long commentCount;
 
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
-    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags, String title, String content, Long viewCount, Long likeCount, LocalDateTime createdAt, LocalDateTime modifiedAt) {
+    public BoardGetResponse(Long id, MemberResponse memberResponse, HashTagListResponse hashtags, String title, String content, Long viewCount, Long likeCount, Long commentCount,LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;
         this.memberResponse = memberResponse;
         this.hashtags = hashtags;
@@ -37,11 +39,12 @@ public class BoardGetResponse {
         this.content = content;
         this.viewCount = viewCount;
         this.likeCount = likeCount;
+        this.commentCount = commentCount;
         this.createdAt = createdAt;
         this.modifiedAt = modifiedAt;
     }
 
-    public static BoardGetResponse of(Board board, List<HashTag> hashTags) {
-        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags), board.getTitle(), board.getContent(), board.getViewCount(), board.getLikeCount(), board.getCreatedAt(), board.getModifiedAt());
+    public static BoardGetResponse of(Board board, BoardSort boardSort, List<HashTag> hashTags) {
+        return new BoardGetResponse(board.getId(), MemberResponse.of(board.getMember()), HashTagListResponse.of(hashTags), board.getTitle(), board.getContent(), boardSort.getViewCount(), boardSort.getLikeCount(), boardSort.getCommentCount(), board.getCreatedAt(), board.getModifiedAt());
     }
 }
