@@ -48,7 +48,7 @@ public class AuthService {
         Long memberId = member.getId();
 
         String accessToken = createAccessToken(memberId);
-        String refreshToken = createRefreshToken();
+        String refreshToken = createRefreshToken(memberId);
 
         return new LoginTokenResponse(accessToken, refreshToken);
     }
@@ -73,19 +73,13 @@ public class AuthService {
         }
     }
 
-    public RefreshResponse refresh(String refreshToken, String accessToken) {
-        String extractedRefreshToken = tokenExtractor.extractToken(refreshToken);
-        String extractedAccessToken = tokenExtractor.extractToken(accessToken);
-
-        blackListRepository.findById(extractedRefreshToken).ifPresent(blackList -> {
+    public RefreshResponse refresh(String header) {
+        String refreshToken = tokenExtractor.extractToken(header);
+        blackListRepository.findById(refreshToken).ifPresent(blackList -> {
             throw new InvalidTokenException("유효하지 않은 refresh token 입니다.");
         });
 
-        if (!tokenProvider.isValid(extractedRefreshToken)) {
-            throw new InvalidTokenException("유효하지 않은 refresh token 입니다.");
-        }
-
-        Long memberId = tokenProvider.forcedGetParsedClaims(extractedAccessToken);
+        Long memberId = tokenProvider.getParsedClaims(refreshToken);
         String newAccessToken = createAccessToken(memberId);
 
         return new RefreshResponse(newAccessToken);
@@ -103,9 +97,9 @@ public class AuthService {
         return tokenProvider.createAccessToken(memberId, issuedAt);
     }
 
-    private String createRefreshToken() {
+    private String createRefreshToken(Long memberId) {
         Date issuedAt = new Date();
-        return tokenProvider.createRefreshToken(issuedAt);
+        return tokenProvider.createRefreshToken(memberId, issuedAt);
     }
 
 }

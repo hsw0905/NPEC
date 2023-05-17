@@ -33,8 +33,8 @@ public class AuthController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<RefreshResponse> refresh(@RequestHeader("Authorization") String accessToken, @RequestHeader("Refresh-Token") String refreshToken) {
-        RefreshResponse response = authService.refresh(refreshToken, accessToken);
+    public ResponseEntity<RefreshResponse> refresh(@RequestHeader("Refresh-Token") String refreshToken) {
+        RefreshResponse response = authService.refresh(refreshToken);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

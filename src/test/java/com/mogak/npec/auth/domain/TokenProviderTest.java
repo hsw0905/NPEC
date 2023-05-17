@@ -36,9 +36,10 @@ class TokenProviderTest {
         // given
         Date now = new Date();
         Date before14days = getBefore14days(now);
+        Long memberId = 1L;
 
         // when
-        String refreshToken = tokenProvider.createRefreshToken(before14days);
+        String refreshToken = tokenProvider.createRefreshToken(memberId, before14days);
 
         // then
         assertThat(tokenProvider.isValid(refreshToken)).isFalse();

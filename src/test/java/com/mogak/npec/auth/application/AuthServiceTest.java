@@ -76,7 +76,7 @@ class AuthServiceTest {
         // given
         Date issuedAt = new Date();
         String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
-        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
         authService.logout(TOKEN_PREFIX + accessToken, TOKEN_PREFIX + refreshToken);
@@ -90,7 +90,7 @@ class AuthServiceTest {
     void logoutSuccessWithExpiredToken() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
         authService.logout(EXPIRED_TOKEN, TOKEN_PREFIX + refreshToken);
@@ -112,12 +112,10 @@ class AuthServiceTest {
     void refreshSuccess() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
-        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
 
         // when
-        RefreshResponse response = authService.refresh(TOKEN_PREFIX + refreshToken,
-                TOKEN_PREFIX + accessToken);
+        RefreshResponse response = authService.refresh(TOKEN_PREFIX + refreshToken);
 
         // then
         assertThat(response.getAccessToken()).isNotEmpty();
@@ -126,11 +124,8 @@ class AuthServiceTest {
     @DisplayName("만료된 토큰으로 요청한 경우 예외를 던진다.")
     @Test
     void refreshFailWithExpiredToken() {
-        Date issuedAt = new Date();
-        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
-
         assertThatThrownBy(
-                () -> authService.refresh(EXPIRED_TOKEN, TOKEN_PREFIX + accessToken)
+                () -> authService.refresh(EXPIRED_TOKEN)
         ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 
@@ -139,12 +134,11 @@ class AuthServiceTest {
     void refreshFailWithBlacklistToken() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
-        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
         blackListRepository.save(new BlackList(refreshToken, 20L));
 
         assertThatThrownBy(
-                () -> authService.refresh(TOKEN_PREFIX + refreshToken, TOKEN_PREFIX + accessToken)
+                () -> authService.refresh(TOKEN_PREFIX + refreshToken)
         ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 }
