@@ -7,8 +7,5 @@ import java.util.Optional;
 
 public interface BoardLikeRepository extends JpaRepository<BoardLike, Long> {
     Boolean existsByMemberIdAndBoardId(Long memberId, Long boardId);
-
     Optional<BoardLike> findByMemberIdAndBoardId(Long memberId, Long boardId);
-
-    Long countByBoardId(Long boardId);
 }
