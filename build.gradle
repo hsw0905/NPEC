@@ -51,9 +51,6 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
 
-    // bulk insert test
-    testImplementation 'org.jeasy:easy-random-core:5.0.0'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.rest-assured:rest-assured:5.3.0'
 }
