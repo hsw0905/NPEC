@@ -22,6 +22,7 @@ import com.mogak.npec.hashtag.domain.HashTag;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
 import com.mogak.npec.member.repository.MemberRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,15 +45,17 @@ public class BoardService {
     private final BoardLikeRepository boardLikeRepository;
     private final HashTagService hashTagService;
     private final BoardSortRepository boardSortRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService, BoardSortRepository boardSortRepository) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService, BoardSortRepository boardSortRepository, ApplicationEventPublisher eventPublisher) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
         this.boardLikeRepository = boardLikeRepository;
         this.hashTagService = hashTagService;
         this.boardSortRepository = boardSortRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -61,10 +64,11 @@ public class BoardService {
                 .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
 
         Board board = new Board(member, request.getTitle(), request.getContent());
-
         Board savedBoard = boardRepository.save(board);
 
         hashTagService.createHashTags(savedBoard, request.getHashTags());
+
+        boardSortRepository.save(BoardSort.of(savedBoard));
 
         return savedBoard.getId();
     }
@@ -169,6 +173,7 @@ public class BoardService {
                 .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
+    // TODO boardlike 서비스 분리하기
     @Transactional
     public void likeBoard(Long boardId, Long memberId) {
         Member findMember = findMember(memberId);
@@ -179,8 +184,9 @@ public class BoardService {
         }
         boardLikeRepository.save(new BoardLike(findMember, findBoard));
 
-        BoardSort boardSort = findBoardSort(boardId);
-        boardSort.increaseLikeCount();
+        eventPublisher.publishEvent(
+                BoardLikeCreatedEvent.of(boardId)
+        );
     }
 
     @Transactional
@@ -193,8 +199,9 @@ public class BoardService {
 
         boardLikeRepository.delete(boardLike);
 
-        BoardSort boardSort = findBoardSort(boardId);
-        boardSort.decreaseLikeCount();
+        eventPublisher.publishEvent(
+                BoardLikeCreatedEvent.of(boardId)
+        );
     }
 
     private BoardSort findBoardSort(Long boardId) {

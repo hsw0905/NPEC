@@ -33,6 +33,11 @@ public class BoardSort extends BaseEntity {
 
     public BoardSort() {
     }
+
+    public static BoardSort of(Board savedBoard) {
+        return new BoardSort(savedBoard, 0L, 0L, 0L);
+    }
+
     public void increaseViewCount() {
         this.viewCount++;
     }
