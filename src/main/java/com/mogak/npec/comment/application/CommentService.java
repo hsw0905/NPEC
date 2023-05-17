@@ -1,9 +1,12 @@
 package com.mogak.npec.comment.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
+import com.mogak.npec.board.dto.BoardSortNotFoundException;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardSortRepository;
 import com.mogak.npec.comment.domain.Comment;
 import com.mogak.npec.comment.dto.*;
 import com.mogak.npec.comment.exception.CommentCanNotModifyException;
@@ -26,11 +29,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
+    private final BoardSortRepository boardSortRepository;
 
-    public CommentService(CommentRepository commentRepository, BoardRepository boardRepository, MemberRepository memberRepository) {
+    public CommentService(CommentRepository commentRepository, BoardRepository boardRepository, MemberRepository memberRepository, BoardSortRepository boardSortRepository) {
         this.commentRepository = commentRepository;
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
+        this.boardSortRepository = boardSortRepository;
     }
 
     @Transactional
@@ -41,8 +46,10 @@ public class CommentService {
         verifyBoard(board);
 
         Comment comment = Comment.parent(member, board, dto.content(), false);
-
         commentRepository.save(comment);
+
+        boardSortRepository.updateCommentCount(board.getId());
+
     }
 
     @Transactional
@@ -56,8 +63,9 @@ public class CommentService {
         verifyBoard(board);
 
         Comment child = Comment.child(member, board, parent, dto.content(), false);
-
         commentRepository.save(child);
+
+        boardSortRepository.updateCommentCount(board.getId());
     }
 
     private void verifyParent(Comment parent) {
@@ -73,9 +81,8 @@ public class CommentService {
     }
 
     private Board findBoard(Long boardId) {
-        return boardRepository.findById(boardId).orElseThrow(
-                () -> new BoardNotFoundException("게시글을 찾을 수 없습니다.")
-        );
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
     }
 
     private Member findMember(Long memberId) {
@@ -88,6 +95,11 @@ public class CommentService {
                 .orElseThrow(() -> new CommentNotFoundException("댓글을 찾을 수 없습니다."));
     }
 
+    private BoardSort findBoardSort(Long boardId) {
+        return boardSortRepository.findByBoardId(boardId)
+                .orElseThrow(() -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다."));
+    }
+
     private void verifyComment(Comment findComment) {
         if (findComment.isDeleted()) {
             throw new CommentCanNotModifyException("삭제된 댓글 입니다.");
@@ -98,12 +110,10 @@ public class CommentService {
     public CommentsResponse findComments(FindCommentsServiceDto dto) {
         Board board = findBoard(dto.boardId());
 
-        List<CommentResponse> commentResponses = new ArrayList<>();
+        List<CommentResponse> commentResponses;
 
         List<Comment> parents = commentRepository.findParentsByBoardId(board.getId());
-        for (Comment parent : parents) {
-            commentResponses.add(toCommentResponse(parent));
-        }
+        commentResponses = parents.stream().map(this::toCommentResponse).collect(Collectors.toList());
 
         return new CommentsResponse(commentResponses);
     }

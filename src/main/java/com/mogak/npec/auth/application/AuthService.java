@@ -15,6 +15,7 @@ import com.mogak.npec.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -47,7 +48,7 @@ public class AuthService {
         Long memberId = member.getId();
 
         String accessToken = createAccessToken(memberId);
-        String refreshToken = createRefreshToken(memberId);
+        String refreshToken = createRefreshToken();
 
         return new LoginTokenResponse(accessToken, refreshToken);
     }
@@ -72,13 +73,19 @@ public class AuthService {
         }
     }
 
-    public RefreshResponse refresh(String header) {
-        String refreshToken = tokenExtractor.extractToken(header);
-        blackListRepository.findById(refreshToken).ifPresent(blackList -> {
+    public RefreshResponse refresh(String refreshToken, String accessToken) {
+        String extractedRefreshToken = tokenExtractor.extractToken(refreshToken);
+        String extractedAccessToken = tokenExtractor.extractToken(accessToken);
+
+        blackListRepository.findById(extractedRefreshToken).ifPresent(blackList -> {
             throw new InvalidTokenException("유효하지 않은 refresh token 입니다.");
         });
 
-        Long memberId = tokenProvider.getParsedClaims(refreshToken);
+        if (!tokenProvider.isValid(extractedRefreshToken)) {
+            throw new InvalidTokenException("유효하지 않은 refresh token 입니다.");
+        }
+
+        Long memberId = tokenProvider.forcedGetParsedClaims(extractedAccessToken);
         String newAccessToken = createAccessToken(memberId);
 
         return new RefreshResponse(newAccessToken);
@@ -92,11 +99,13 @@ public class AuthService {
     }
 
     private String createAccessToken(Long memberId) {
-        return tokenProvider.createAccessToken(memberId);
+        Date issuedAt = new Date();
+        return tokenProvider.createAccessToken(memberId, issuedAt);
     }
 
-    private String createRefreshToken(Long memberId) {
-        return tokenProvider.createRefreshToken(memberId);
+    private String createRefreshToken() {
+        Date issuedAt = new Date();
+        return tokenProvider.createRefreshToken(issuedAt);
     }
 
 }

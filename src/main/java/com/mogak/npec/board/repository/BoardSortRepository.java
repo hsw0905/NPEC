@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
-public interface BoardSortRepository extends JpaRepository<BoardSort, Long> {
+public interface BoardSortRepository extends JpaRepository<BoardSort, Long>, BoardSortQueryRepository {
     Optional<BoardSort> findByBoardId(Long boardId);
 
     @Transactional

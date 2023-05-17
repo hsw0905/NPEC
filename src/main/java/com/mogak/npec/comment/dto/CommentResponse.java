@@ -26,7 +26,7 @@ public class CommentResponse {
 
     public static CommentResponse of(Comment comment, List<ReplyResponse> replies) {
         if (comment.isDeleted()) {
-            return new CommentResponse(comment.getId(), comment.getMember().getNickname(), null,
+            return new CommentResponse(comment.getId(), null, null,
                     replies, comment.getCreatedAt(), comment.getUpdatedAt());
         }
         return new CommentResponse(comment.getId(), comment.getMember().getNickname(), comment.getContent(),

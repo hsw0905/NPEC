@@ -32,25 +32,22 @@ public class TokenProvider {
         this.jwtParser = Jwts.parserBuilder().setSigningKey(this.secretKey).build();
     }
 
-    public String createAccessToken(Long memberId) {
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + accessValidityMilliSeconds);
+    public String createAccessToken(Long memberId, Date issuedAt) {
+        Date expireDate = new Date(issuedAt.getTime() + accessValidityMilliSeconds);
 
         return Jwts.builder()
                 .claim("memberId", memberId)
-                .setIssuedAt(now)
+                .setIssuedAt(issuedAt)
                 .setExpiration(expireDate)
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String createRefreshToken(Long memberId) {
-        Date now = new Date();
-        Date expireDate = new Date(now.getTime() + refreshValidityMilliSeconds);
+    public String createRefreshToken(Date issuedAt) {
+        Date expireDate = new Date(issuedAt.getTime() + refreshValidityMilliSeconds);
 
         return Jwts.builder()
-                .claim("memberId", memberId)
-                .setIssuedAt(now)
+                .setIssuedAt(issuedAt)
                 .setExpiration(expireDate)
                 .signWith(secretKey)
                 .compact();
@@ -66,6 +63,25 @@ public class TokenProvider {
 
         } catch (ExpiredJwtException ex) {
             throw new InvalidTokenException("만료기간이 지난 토큰입니다.");
+        } catch (SignatureException ex) {
+            throw new InvalidTokenException("믿을 수 없는 토큰입니다.");
+        } catch (MalformedJwtException ex) {
+            throw new InvalidTokenException("올바른 토큰 형태가 아닙니다.");
+        } catch (UnsupportedJwtException | IllegalArgumentException exception) {
+            throw new InvalidTokenException("지원하지 않는 토큰 형식입니다.");
+        }
+    }
+
+    public Long forcedGetParsedClaims(String token) {
+        try {
+            Claims claims = jwtParser
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.get("memberId", Long.class);
+
+        } catch (ExpiredJwtException ex) {
+            return ex.getClaims().get("memberId", Long.class);
         } catch (SignatureException ex) {
             throw new InvalidTokenException("믿을 수 없는 토큰입니다.");
         } catch (MalformedJwtException ex) {

@@ -1,9 +1,11 @@
 package com.mogak.npec.comment.application;
 
 import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
 import com.mogak.npec.board.exceptions.BoardCanNotModifyException;
 import com.mogak.npec.board.exceptions.BoardNotFoundException;
 import com.mogak.npec.board.repository.BoardRepository;
+import com.mogak.npec.board.repository.BoardSortRepository;
 import com.mogak.npec.comment.domain.Comment;
 import com.mogak.npec.comment.dto.CommentModifyResponse;
 import com.mogak.npec.comment.dto.CommentsResponse;
@@ -46,6 +48,9 @@ public class CommentServiceTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private BoardSortRepository boardSortRepository;
+
     private Member member;
     private Board board;
 
@@ -53,20 +58,23 @@ public class CommentServiceTest {
     void setUp() {
         member = new Member("tester", "test@example.com", "1234ab1!");
         board = new Board(member, "제목", "내용", false);
+        BoardSort boardSort = new BoardSort(board, 0L, 0L, 0L);
 
         memberRepository.save(member);
         boardRepository.save(board);
+        boardSortRepository.save(boardSort);
     }
 
     @AfterEach
     void tearDown() {
         commentRepository.deleteAll();
+        boardSortRepository.deleteAll();
         boardRepository.deleteAll();
         memberRepository.deleteAll();
     }
 
 
-    @DisplayName("게시물에 댓글을 생성한다.")
+    @DisplayName("게시물에 댓글이 생성되며, 게시물 댓글수가 1 증가한다.")
     @Test
     void createCommentSuccess() {
         // given
@@ -78,11 +86,13 @@ public class CommentServiceTest {
 
         // then
         List<Comment> comments = commentRepository.findAll();
+        BoardSort boardSort = boardSortRepository.findByBoardId(board.getId()).get();
 
         assertAll(
                 () -> assertThat(comments.size()).isEqualTo(1),
                 () -> assertThat(comments.get(0).getBoard().getId()).isEqualTo(dto.boardId()),
-                () -> assertThat(comments.get(0).getMember().getId()).isEqualTo(dto.memberId())
+                () -> assertThat(comments.get(0).getMember().getId()).isEqualTo(dto.memberId()),
+                () -> assertThat(boardSort.getCommentCount()).isEqualTo(1)
         );
     }
 
@@ -125,7 +135,7 @@ public class CommentServiceTest {
                 .isInstanceOf(BoardCanNotModifyException.class);
     }
 
-    @DisplayName("댓글에 대댓글을 생성한다.")
+    @DisplayName("댓글에 대댓글이 생성되며, 해당 게시물의 댓글 수가 1 증가한다.")
     @Test
     void createReplySuccess() {
         // given
@@ -138,12 +148,14 @@ public class CommentServiceTest {
 
         // then
         List<Comment> comments = commentRepository.findAll();
+        BoardSort boardSort = boardSortRepository.findByBoardId(board.getId()).get();
 
-        assertThat(comments.size()).isEqualTo(2);
-        assertThat(comments.get(0).isParent()).isTrue();
-        assertThat(comments.get(1).getParent().getId()).isEqualTo(comments.get(0).getId());
-
-
+        assertAll(
+                () -> assertThat(comments.size()).isEqualTo(2),
+                () -> assertThat(comments.get(0).isParent()).isTrue(),
+                () -> assertThat(comments.get(1).getParent().getId()).isEqualTo(comments.get(0).getId()),
+                () -> assertThat(boardSort.getCommentCount()).isEqualTo(1)
+        );
     }
 
     @DisplayName("대댓글엔 다시 대댓글을 생성할 수 없다. (depth: 1)")
@@ -223,9 +235,10 @@ public class CommentServiceTest {
         // then
         assertAll(
                 () -> assertThat(comments.getCount()).isEqualTo(1),
-                () -> assertThat(comments.getComments().get(0).getWriter()).isEqualTo(member.getNickname()),
+                () -> assertThat(comments.getComments().get(0).getWriter()).isNull(),
                 () -> assertThat(comments.getComments().get(0).getContent()).isNull(),
                 () -> assertThat(comments.getComments().get(0).getReplies().size()).isEqualTo(1),
+                () -> assertThat(comments.getComments().get(0).getReplies().get(0).getWriter()).isNull(),
                 () -> assertThat(comments.getComments().get(0).getReplies().get(0).getContent()).isNull()
         );
     }
@@ -279,28 +292,23 @@ public class CommentServiceTest {
                 .isInstanceOf(InvalidCommentWriterException.class);
     }
 
-//    @DisplayName("작성자의 요청인 경우 댓글과 하위 대댓글이 삭제된다.")
-//    @Test
-//    void deleteCommentSuccess() {
-//        // given
-//        Comment parent = Comment.parent(member, board, "댓글내용", false);
-//        Comment child = Comment.child(member, board, parent, "대댓글내용", false);
-//        parent.getChildren().add(child);
-//
-//        commentRepository.save(parent);
-//        commentRepository.save(child);
-//
-//        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), parent.getId());
-//        // when
-//        commentService.deleteComment(dto);
-//
-//        // then
-//        List<Comment> comments = commentRepository.findAll();
-//
-//        for (Comment comment : comments) {
-//            assertThat(comment.isDeleted()).isTrue();
-//        }
-//    }
+    @DisplayName("작성자의 요청인 경우 댓글이 삭제 상태가 된다.")
+    @Test
+    void softDeleteCommentSuccess() {
+        // given
+        Comment parent = Comment.parent(member, board, "댓글내용", false);
+
+        commentRepository.save(parent);
+
+        DeleteCommentServiceDto dto = new DeleteCommentServiceDto(member.getId(), parent.getId());
+        // when
+        commentService.deleteComment(dto);
+
+        // then
+        List<Comment> comments = commentRepository.findAll();
+        assertThat(comments.size()).isEqualTo(1);
+        assertThat(comments.get(0).isDeleted()).isTrue();
+    }
 
     @DisplayName("작성자가 아니면 삭제 요청이 실패한다.")
     @Test
