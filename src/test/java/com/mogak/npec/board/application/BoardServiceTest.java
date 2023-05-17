@@ -329,8 +329,8 @@ class BoardServiceTest {
     void cancelLikeBoardSuccess() {
         // given
         Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
-        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 0L, 1L, 0L));
-        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 1L, 1L, 0L));
+        boardLikeRepository.save(new BoardLike(newMember, savedBoard));
 
         // when
         boardService.cancelLikeBoard(savedBoard.getId(), newMember.getId());
