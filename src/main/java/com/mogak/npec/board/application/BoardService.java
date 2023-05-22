@@ -148,7 +148,7 @@ public class BoardService {
     }
 
     private void verifyBoard(Board findBoard) {
-        if (findBoard.isDeleted()) {
+        if (findBoard.getIsDeleted()) {
             throw new BoardCanNotModifyException("삭제된 게시물 입니다.");
         }
     }

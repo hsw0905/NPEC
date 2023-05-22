@@ -268,7 +268,7 @@ class BoardServiceTest {
 
         // then
         Board findBoard = boardRepository.findById(savedBoard.getId()).get();
-        assertThat(findBoard.isDeleted()).isTrue();
+        assertThat(findBoard.getIsDeleted()).isTrue();
     }
 
     @DisplayName("게시물 작성자가 아닌 멤버가 삭제를 요청한 경우 예외를 던진다.")
