@@ -1,12 +1,7 @@
 spring:
   profiles:
-    active: local
+    default: test
 
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/npec
-    username: postgres
-    password: 1234
   jpa:
     hibernate:
       ddl-auto: create
@@ -34,25 +29,23 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://ec2-3-39-23-252.ap-northeast-2.compute.amazonaws.com:5432/npecdb
+    url: jdbc:postgresql://localhost:5432/npec
     username: postgres
     password: 1234
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
+
 ---
 spring:
   config:
     activate:
       on-profile: prod
 
-  datasource:
-    url: jdbc:h2:~/npec
-
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 ---
 spring:
   config:
@@ -61,6 +54,9 @@ spring:
 
   datasource:
     url: jdbc:h2:~/npec
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
   jpa:
     hibernate:

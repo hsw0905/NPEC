@@ -1,6 +1,6 @@
 package com.mogak.npec.board.repository;
 
-import com.mogak.npec.board.domain.Board;
+import com.mogak.npec.board.domain.BoardSort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -11,16 +11,16 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class BoardBulkRepository {
-    private final String TABLE = "boards";
+public class BoardSortBulkRepository {
+    private final String TABLE = "board_sorts";
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public void bulkInsert(List<Board> boards) {
+    public void bulkInsert(List<BoardSort> boardSorts) {
         String sql = String.format("""
-                INSERT INTO %s (members_id, title, content, is_deleted, modified_at, created_at, updated_at)
-                VALUES (:member.id, :title, :content, :isDeleted, :modifiedAt, :createdAt, :updatedAt)
+                INSERT INTO %s (boards_id, like_count, view_count, comment_count, created_at, updated_at)
+                VALUES (:board.id, :likeCount, :viewCount, :commentCount, :createdAt, :updatedAt)
                 """, TABLE);
-        SqlParameterSource[] params = boards
+        SqlParameterSource[] params = boardSorts
                 .stream()
                 .map(BeanPropertySqlParameterSource::new)
                 .toArray(SqlParameterSource[]::new);
@@ -35,6 +35,4 @@ public class BoardBulkRepository {
 
         jdbcTemplate.getJdbcOperations().execute(sql);
     }
-
-
 }

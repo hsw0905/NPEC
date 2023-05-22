@@ -1,27 +1,26 @@
 package com.mogak.npec.board.domain;
 
 import com.mogak.npec.common.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 @Getter
 @Entity
+@Table(name = "board_sorts")
 public class BoardSort extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "board_id")
+    @JoinColumn(name = "boards_id")
     private Board board;
 
+    @JoinColumn(name = "like_count")
     private Long likeCount;
+    @JoinColumn(name = "view_count")
     private Long viewCount;
+    @JoinColumn(name = "comment_count")
     private Long commentCount;
 
     public BoardSort(Board board, Long likeCount, Long viewCount, Long commentCount) {

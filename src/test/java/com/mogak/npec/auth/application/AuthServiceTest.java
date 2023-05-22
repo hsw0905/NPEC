@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Date;
 
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class AuthServiceTest {
     private final String EXPIRED_TOKEN = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJtZW1iZXJJZCI6MSwiaWF0IjoxNjgxODAwNDgzLCJleHAiOjE2ODE4MDA1NDN9.Z4vT9gS2I-dT7ljOfPJmtQBWjl5T7806IycG0xRwk58";
     private final String TOKEN_PREFIX = "Bearer ";

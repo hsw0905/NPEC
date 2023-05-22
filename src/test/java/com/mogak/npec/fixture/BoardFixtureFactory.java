@@ -8,20 +8,13 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
-import java.util.Random;
 import java.util.function.Predicate;
 
 import static org.jeasy.random.FieldPredicates.*;
 
 @Component
 public class BoardFixtureFactory {
-    private Random random;
-
-    public BoardFixtureFactory() {
-        this.random = new Random();
-    }
-
-    public static EasyRandom get() {
+    public EasyRandom get() {
         Predicate<Field> idPredicate = named("id")
                 .and(ofType(Long.class))
                 .and(inClass(Board.class));
