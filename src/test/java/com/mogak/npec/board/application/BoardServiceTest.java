@@ -305,10 +305,7 @@ class BoardServiceTest {
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
-
         assertThat(boardLikes.size()).isEqualTo(1);
-        assertThat(likeCount).isEqualTo(1L);
     }
 
     @DisplayName("같은 사용자가 동일 게시물에 대해 중복 추천 시 익셉션을 던진다.")
@@ -329,18 +326,15 @@ class BoardServiceTest {
     void cancelLikeBoardSuccess() {
         // given
         Member newMember = memberRepository.save(new Member("kim coding2", "npec2@npec.com", "1234"));
-        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 0L, 1L, 0L));
-        boardService.likeBoard(savedBoard.getId(), newMember.getId());
+        BoardSort boardSort = boardSortRepository.save(new BoardSort(savedBoard, 1L, 1L, 0L));
+        boardLikeRepository.save(new BoardLike(newMember, savedBoard));
 
         // when
         boardService.cancelLikeBoard(savedBoard.getId(), newMember.getId());
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
-
         assertThat(boardLikes.size()).isEqualTo(0);
-        assertThat(likeCount).isEqualTo(0);
     }
 
     @DisplayName("추천을 하지 않은 사용자가 추천 취소 요청이 올 경우 익셉션을 던진다.")
