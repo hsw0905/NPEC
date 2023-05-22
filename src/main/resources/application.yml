@@ -33,11 +33,14 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:h2:~/npec
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://ec2-43-200-163-205.ap-northeast-2.compute.amazonaws.com:5432/npecdb
+    username: npec
+    password: 1234
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
 ---
 spring:
   config:
