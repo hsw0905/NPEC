@@ -305,10 +305,7 @@ class BoardServiceTest {
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
-
         assertThat(boardLikes.size()).isEqualTo(1);
-        assertThat(likeCount).isEqualTo(1L);
     }
 
     @DisplayName("같은 사용자가 동일 게시물에 대해 중복 추천 시 익셉션을 던진다.")
@@ -337,10 +334,7 @@ class BoardServiceTest {
 
         // then
         List<BoardLike> boardLikes = boardLikeRepository.findAll();
-        Long likeCount = boardSortRepository.findById(boardSort.getId()).get().getLikeCount();
-
         assertThat(boardLikes.size()).isEqualTo(0);
-        assertThat(likeCount).isEqualTo(0);
     }
 
     @DisplayName("추천을 하지 않은 사용자가 추천 취소 요청이 올 경우 익셉션을 던진다.")

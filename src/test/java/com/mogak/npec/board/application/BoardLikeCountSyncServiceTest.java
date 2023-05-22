@@ -9,6 +9,7 @@ import com.mogak.npec.board.repository.BoardSortRepository;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.repository.MemberRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,14 @@ class BoardLikeCountSyncServiceTest {
         member = memberRepository.save(new Member("kim", "user@npec.om", "1234"));
         board = boardRepository.save(new Board(member, "제목1", "내용1"));
         boardSortRepository.save(new BoardSort(board, 0L, 0L, 0L));
+    }
+
+    @AfterEach
+    void tearDown() {
+        boardSortRepository.deleteAll();
+        boardLikeRepository.deleteAll();
+        boardRepository.deleteAll();
+        memberRepository.deleteAll();
     }
 
     @DisplayName("주어진 boardId 의 likeCount 값을 업데이트하여 싱크를 맞춘다.")
