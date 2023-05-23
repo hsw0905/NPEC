@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Date;
 
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class AuthServiceTest {
     private final String EXPIRED_TOKEN = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJtZW1iZXJJZCI6MSwiaWF0IjoxNjgxODAwNDgzLCJleHAiOjE2ODE4MDA1NDN9.Z4vT9gS2I-dT7ljOfPJmtQBWjl5T7806IycG0xRwk58";
     private final String TOKEN_PREFIX = "Bearer ";
@@ -76,7 +78,7 @@ class AuthServiceTest {
         // given
         Date issuedAt = new Date();
         String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
-        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
 
         // when
         authService.logout(TOKEN_PREFIX + accessToken, TOKEN_PREFIX + refreshToken);
@@ -90,7 +92,7 @@ class AuthServiceTest {
     void logoutSuccessWithExpiredToken() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
 
         // when
         authService.logout(EXPIRED_TOKEN, TOKEN_PREFIX + refreshToken);
@@ -112,10 +114,12 @@ class AuthServiceTest {
     void refreshSuccess() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
+        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
 
         // when
-        RefreshResponse response = authService.refresh(TOKEN_PREFIX + refreshToken);
+        RefreshResponse response = authService.refresh(TOKEN_PREFIX + refreshToken,
+                TOKEN_PREFIX + accessToken);
 
         // then
         assertThat(response.getAccessToken()).isNotEmpty();
@@ -124,8 +128,11 @@ class AuthServiceTest {
     @DisplayName("만료된 토큰으로 요청한 경우 예외를 던진다.")
     @Test
     void refreshFailWithExpiredToken() {
+        Date issuedAt = new Date();
+        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
+
         assertThatThrownBy(
-                () -> authService.refresh(EXPIRED_TOKEN)
+                () -> authService.refresh(EXPIRED_TOKEN, TOKEN_PREFIX + accessToken)
         ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 
@@ -134,11 +141,12 @@ class AuthServiceTest {
     void refreshFailWithBlacklistToken() {
         // given
         Date issuedAt = new Date();
-        String refreshToken = tokenProvider.createRefreshToken(1L, issuedAt);
+        String refreshToken = tokenProvider.createRefreshToken(issuedAt);
+        String accessToken = tokenProvider.createAccessToken(1L, issuedAt);
         blackListRepository.save(new BlackList(refreshToken, 20L));
 
         assertThatThrownBy(
-                () -> authService.refresh(TOKEN_PREFIX + refreshToken)
+                () -> authService.refresh(TOKEN_PREFIX + refreshToken, TOKEN_PREFIX + accessToken)
         ).isExactlyInstanceOf(InvalidTokenException.class);
     }
 }

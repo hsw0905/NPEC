@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "boards")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Board extends BaseEntity {
     @Id
@@ -63,5 +62,29 @@ public class Board extends BaseEntity {
 
     public void delete() {
         this.isDeleted = true;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Member getMember() {
+        return member;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public LocalDateTime getModifiedAt() {
+        return modifiedAt;
     }
 }

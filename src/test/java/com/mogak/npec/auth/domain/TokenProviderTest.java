@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class TokenProviderTest {
     @Autowired
     private TokenProvider tokenProvider;
@@ -36,10 +38,9 @@ class TokenProviderTest {
         // given
         Date now = new Date();
         Date before14days = getBefore14days(now);
-        Long memberId = 1L;
 
         // when
-        String refreshToken = tokenProvider.createRefreshToken(memberId, before14days);
+        String refreshToken = tokenProvider.createRefreshToken(before14days);
 
         // then
         assertThat(tokenProvider.isValid(refreshToken)).isFalse();
