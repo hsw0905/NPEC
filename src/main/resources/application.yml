@@ -36,6 +36,9 @@ spring:
 
   datasource:
     url: jdbc:h2:~/npec
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
   jpa:
     hibernate:
@@ -47,9 +50,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: jdbc:postgresql://ec2-43-200-163-205.ap-northeast-2.compute.amazonaws.com:5432/npecdb
+    url: jdbc:postgresql://ec2-3-39-23-252.ap-northeast-2.compute.amazonaws.com:5432/npecdb
     driver-class-name: org.postgresql.Driver
-    username: npec
+    username: postgres
     password: 1234
 
   jpa:

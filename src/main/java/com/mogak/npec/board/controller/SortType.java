@@ -5,7 +5,8 @@ import lombok.Getter;
 public enum SortType {
     VIEW_COUNT("viewCount"),
     LIKE_COUNT("likeCount"),
-    COMMENT_COUNT("commentCount");
+    COMMENT_COUNT("commentCount"),
+    LATEST("createdAt");
 
     @Getter
     private final String sortField;

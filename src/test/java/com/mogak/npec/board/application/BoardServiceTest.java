@@ -1,5 +1,6 @@
 package com.mogak.npec.board.application;
 
+import com.mogak.npec.board.controller.SortType;
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
 import com.mogak.npec.board.domain.BoardSort;
@@ -23,8 +24,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -71,21 +70,21 @@ class BoardServiceTest {
     @Test
     void getBoardsWithSuccess() {
         // given
-        Board board1 = boardRepository.save(new Board(member, "최신순 1등", "내용"));
-        Board board2 = boardRepository.save(new Board(member, "최신순 2등", "내용"));
+        Board board1 = boardRepository.save(new Board(member, "최신순 2등", "내용"));
+        Board board2 = boardRepository.save(new Board(member, "최신순 1등", "내용"));
 
         boardSortRepository.save(new BoardSort(savedBoard, 0L, 0L, 0L));
         boardSortRepository.save(new BoardSort(board2, 0L, 0L, 0L));
         boardSortRepository.save(new BoardSort(board1, 0L, 0L, 0L));
 
         // when
-        BoardListResponse boards = boardService.getBoards(PageRequest.of(0, 3, Sort.by("createdAt").descending()));
+        BoardListResponse boards = boardService.getBoards(0, SortType.LATEST);
 
         // then
         List<BoardResponse> boardResponses = boards.getBoardResponses();
         assertAll(
-                () -> assertThat(boardResponses.get(0).getId()).isEqualTo(board1.getId()),
-                () -> assertThat(boardResponses.get(1).getId()).isEqualTo(board2.getId()),
+                () -> assertThat(boardResponses.get(0).getId()).isEqualTo(board2.getId()),
+                () -> assertThat(boardResponses.get(1).getId()).isEqualTo(board1.getId()),
                 () -> assertThat(boardResponses.get(2).getId()).isEqualTo(savedBoard.getId())
         );
     }
@@ -101,10 +100,8 @@ class BoardServiceTest {
         boardSortRepository.save(new BoardSort(board1, 0L, 10L, 0L));
         boardSortRepository.save(new BoardSort(board2, 0L, 9L, 0L));
 
-        PageRequest pageable = PageRequest.of(0, 3, Sort.by("viewCount").descending());
-
         // when
-        BoardListResponse boards = boardService.getBoards(pageable);
+        BoardListResponse boards = boardService.getBoards(0, SortType.VIEW_COUNT);
 
         // then
         List<BoardResponse> boardResponses = boards.getBoardResponses();
@@ -126,10 +123,8 @@ class BoardServiceTest {
         boardSortRepository.save(new BoardSort(board1, 9L, 0L, 0L));
         boardSortRepository.save(new BoardSort(board2, 11L, 0L, 0L));
 
-        PageRequest pageable = PageRequest.of(0, 3, Sort.by("likeCount").descending());
-
         // when
-        BoardListResponse boards = boardService.getBoards(pageable);
+        BoardListResponse boards = boardService.getBoards(0, SortType.LIKE_COUNT);
 
         // then
         List<BoardResponse> boardResponses = boards.getBoardResponses();
@@ -151,10 +146,8 @@ class BoardServiceTest {
         boardSortRepository.save(new BoardSort(board1, 0L, 0L, 14L));
         boardSortRepository.save(new BoardSort(board2, 0L, 0L, 9L));
 
-        PageRequest pageable = PageRequest.of(0, 3, Sort.by("commentCount").descending());
-
         // when
-        BoardListResponse boards = boardService.getBoards(pageable);
+        BoardListResponse boards = boardService.getBoards(0, SortType.COMMENT_COUNT);
 
         // then
         List<BoardResponse> boardResponses = boards.getBoardResponses();
