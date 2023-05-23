@@ -1,6 +1,7 @@
 package com.mogak.npec.board.repository;
 
 import com.mogak.npec.board.domain.BoardSort;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +20,6 @@ public interface BoardSortRepository extends JpaRepository<BoardSort, Long>, Boa
     @Modifying
     @Query("update BoardSort bs set bs.likeCount = :count where bs.board.id = :boardId")
     void updateLikeCount(@Param("count") Long count, @Param("boardId") Long boardId);
+
+    List<BoardSort> findByBoardIdIn(List<Long> boardIds);
 }
