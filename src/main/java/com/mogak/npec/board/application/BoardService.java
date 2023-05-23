@@ -1,5 +1,6 @@
 package com.mogak.npec.board.application;
 
+import com.mogak.npec.board.controller.SortType;
 import com.mogak.npec.board.domain.Board;
 import com.mogak.npec.board.domain.BoardLike;
 import com.mogak.npec.board.domain.BoardSort;
@@ -22,8 +23,11 @@ import com.mogak.npec.hashtag.domain.HashTag;
 import com.mogak.npec.member.domain.Member;
 import com.mogak.npec.member.exception.MemberNotFoundException;
 import com.mogak.npec.member.repository.MemberRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,15 +48,17 @@ public class BoardService {
     private final BoardLikeRepository boardLikeRepository;
     private final HashTagService hashTagService;
     private final BoardSortRepository boardSortRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
-    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService, BoardSortRepository boardSortRepository) {
+    public BoardService(BoardRepository boardRepository, MemberRepository memberRepository, S3Helper s3Helper, BoardLikeRepository boardLikeRepository, HashTagService hashTagService, BoardSortRepository boardSortRepository, ApplicationEventPublisher eventPublisher) {
         this.boardRepository = boardRepository;
         this.memberRepository = memberRepository;
         this.s3Helper = s3Helper;
         this.boardLikeRepository = boardLikeRepository;
         this.hashTagService = hashTagService;
         this.boardSortRepository = boardSortRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -71,24 +77,44 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardListResponse getBoards(Pageable pageable) {
+    public BoardListResponse getBoards(int page, SortType sortType) {
+        PageRequest pageable = PageRequest.of(page, 10, Sort.by(sortType.getSortField()).descending());
+
+        if (sortType.equals(SortType.LATEST)) {
+            Page<Board> boards = boardRepository.findAll(pageable);
+            List<Long> boardIds = boards.stream()
+                    .map(Board::getId)
+                    .toList();
+
+            List<BoardSort> boardSorts = boardSortRepository.findByBoardIdIn(boardIds);
+            Map<Long, BoardSort> boardSortsByBoardId = boardSorts.stream().collect(Collectors.toMap(boardSort -> boardSort.getBoard().getId(), boardSort -> boardSort));
+
+            Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
+
+            return BoardListResponse.of(boards.getContent(), boardSortsByBoardId, hashTagsByBoardId, boards.getTotalPages());
+        }
+
+        // boardSort 에서 정렬이 된 순서대로 가져온다.
         Page<BoardSort> boardSorts = boardSortRepository.findAll(pageable);
-        List<Long> boardIds = boardSorts.getContent().stream()
+        // 정렬된 boardId 리스트를 만든다.
+        List<Long> sortedBoardIds = boardSorts.getContent().stream()
                 .map(boardSort -> boardSort.getBoard().getId())
                 .toList();
 
-        List<Board> boards = boardRepository.findAllByIdIn(boardIds);
+        // boardId 리스트로 board 리스트를 조회한다.
+        List<Board> boards = boardRepository.findAllByIdIn(sortedBoardIds);
+        // boardId:board 맵을 만든다.
         Map<Long, Board> boardByBoardId = boards.stream()
                 .collect(Collectors.toMap(Board::getId, board -> board));
 
-        List<Board> sortedBoard = boardIds.stream()
+        // 정렬된 boardId를 순회하면서 board map 을 조회하여 정렬된 board list 를 만든다.
+        List<Board> sortedBoard = sortedBoardIds.stream()
                 .map(boardByBoardId::get)
                 .toList();
 
         Map<Long, BoardSort> boardSortsByBoardId = boardSorts.getContent().stream()
                 .collect(Collectors.toMap(boardSort -> boardSort.getBoard().getId(), boardSort -> boardSort));
-
-        Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(boardIds);
+        Map<Long, List<HashTag>> hashTagsByBoardId = hashTagService.getHashTags(sortedBoardIds);
 
         return BoardListResponse.of(sortedBoard, boardSortsByBoardId, hashTagsByBoardId, boardSorts.getTotalPages());
     }
@@ -170,6 +196,7 @@ public class BoardService {
                 .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
+    // TODO boardlike 서비스 분리하기
     @Transactional
     public void likeBoard(Long boardId, Long memberId) {
         Member findMember = findMember(memberId);
@@ -180,8 +207,9 @@ public class BoardService {
         }
         boardLikeRepository.save(new BoardLike(findMember, findBoard));
 
-        BoardSort boardSort = findBoardSort(boardId);
-        boardSort.increaseLikeCount();
+        eventPublisher.publishEvent(
+                BoardLikeCreatedEvent.of(boardId)
+        );
     }
 
     @Transactional
@@ -194,15 +222,15 @@ public class BoardService {
 
         boardLikeRepository.delete(boardLike);
 
-        BoardSort boardSort = findBoardSort(boardId);
-        boardSort.decreaseLikeCount();
+        eventPublisher.publishEvent(
+                BoardLikeCreatedEvent.of(boardId)
+        );
     }
 
     private BoardSort findBoardSort(Long boardId) {
-        BoardSort boardSort = boardSortRepository.findByBoardId(boardId).orElseThrow(
+        return boardSortRepository.findByBoardId(boardId).orElseThrow(
                 () -> new BoardSortNotFoundException("board sort 가 저장되어 있지 않습니다.")
         );
-        return boardSort;
     }
 
     @Transactional(readOnly = true)

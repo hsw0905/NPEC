@@ -8,7 +8,6 @@ import com.mogak.npec.board.dto.BoardImageResponse;
 import com.mogak.npec.board.dto.BoardListResponse;
 import com.mogak.npec.board.dto.BoardUpdateRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -47,8 +46,8 @@ public class BoardController {
 
     @GetMapping
     public ResponseEntity<BoardListResponse> getBoards(@RequestParam("page") int page, @RequestParam("sort") SortType sortType) {
-        PageRequest pageable = PageRequest.of(page, 10, Sort.by(sortType.getSortField()).descending());
-        BoardListResponse response = boardService.getBoards(pageable);
+        BoardListResponse response = boardService.getBoards(page, sortType);
+
         return ResponseEntity.ok(response);
     }
 
