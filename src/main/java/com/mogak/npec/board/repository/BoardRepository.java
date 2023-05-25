@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
+    @Query(value = "select b from Board b join fetch b.member where b.isDeleted = false",
+            countQuery = "select count(b) from Board b where b.isDeleted = false")
     Page<Board> findAllByIsDeletedFalse(Pageable pageable);
 
     @Query("select b from Board b where b.content like %:query% or b.title like %:query%")

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "board_sorts")
+@Table(name = "board_sorts", indexes = @Index(name = "idx_boards_id", columnList = "boards_id"))
 public class BoardSort extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
