@@ -5,19 +5,19 @@ volumes:
 
 services:
   postgres:
-    image: postgres:latest
-    container_name: npec
+    image: mysql:8.0.33
+    container_name: npec_db
     volumes:
-      - test_volume:/var/lib/data
+      - /var/lib/npec/data
     ports:
-      - "5432:5432"
+      - "3306:3306"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=1234
-      - POSTGRES_DB=npec
-      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
-
+      MYSQL_ROOT_PASSWORD: npce_root_1234
+      MYSQL_DATABASE: npec
+    command:
+      - --collation-server=utf8mb4_general_ci
   redis:
-    image: redis:latest
+    image: redis:7.0.11
+    container_name: npec_redis
     ports:
       - "6379:6379"
