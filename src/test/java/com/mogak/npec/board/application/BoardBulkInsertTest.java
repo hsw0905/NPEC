@@ -79,25 +79,24 @@ public class BoardBulkInsertTest {
         System.out.println("Bulk Insert Start!!");
         stopWatch.start();
 
-        boardSortBulkRepository.bulkInsert(createBoardSorts(1L, 1_000_000L));
-        boardSortBulkRepository.bulkInsert(createBoardSorts(1_000_001L, 2_000_000L));
-        boardSortBulkRepository.bulkInsert(createBoardSorts(2_000_001L, 3_000_000L));
-        boardSortBulkRepository.bulkInsert(createBoardSorts(3_000_001L, 4_000_000L));
-        boardSortBulkRepository.bulkInsert(createBoardSorts(4_000_001L, 5_000_000L));
+        Long startIdx = 1L;
+        Long endIdx = startIdx + 10_000L;
+        for (int i = 0; i < 300; i++) {
+            boardSortBulkRepository.bulkInsert(createBoardSorts(startIdx, endIdx));
+        }
 
         stopWatch.stop();
         System.out.println("쿼리 실행 시간: " + stopWatch.getTotalTimeSeconds() + "초");
     }
 
     private List<BoardSort> createBoardSorts(Long startIdIndex, Long endIdIndex) {
-        List<BoardSort> boardSorts = Stream
+
+        return Stream
                 .iterate(startIdIndex, i -> i < endIdIndex, i -> i + 1)
                 .parallel()
                 .map(i -> boardSortFixtureFactory.get(i))
                 .map(easyRandom -> easyRandom.nextObject(BoardSort.class))
                 .collect(Collectors.toList());
-
-        return boardSorts;
     }
 
     private List<Board> createBoards(int countPerQuery) {

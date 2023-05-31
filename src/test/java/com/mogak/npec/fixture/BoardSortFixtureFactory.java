@@ -34,8 +34,8 @@ public class BoardSortFixtureFactory {
 
         EasyRandomParameters parameters = new EasyRandomParameters()
                 .excludeField(idPredicate)
-                .randomize(likeCountPredicate, new LongRangeRandomizer(0L, 250L))
-                .randomize(viewCountPredicate, new LongRangeRandomizer(0L, 5000L))
+                .randomize(likeCountPredicate, () -> 0L)
+                .randomize(viewCountPredicate, new LongRangeRandomizer(0L, 90000L))
                 .randomize(commentCountPredicate, () -> 0L)
                 .randomize(Long.class, () -> index)
                 .dateRange(LocalDate.of(2022, 1, 1),
