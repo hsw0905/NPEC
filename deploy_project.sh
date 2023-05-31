@@ -5,14 +5,6 @@ PROJECT_PATH=/home/ubuntu/NPEC
 PROJECT_NAME=npec
 PROJECT_BUILD_PATH=build/libs
 
-cd $PROJECT_PATH
-
-clear
-
-echo "💚 Github에서 프로젝트를 Pull 합니다."
-
-git pull origin main
-
 echo "💚SpringBoot 프로젝트 빌드를 시작합니다."
 
 ./gradlew build --exclude-task test
