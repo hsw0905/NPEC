@@ -39,3 +39,4 @@ out/
 src/main/resources/secret.yml
 
 deploy.sh
+print_api_server_logs.sh
