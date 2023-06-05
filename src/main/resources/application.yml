@@ -36,8 +36,8 @@ spring:
 server:
   tomcat:
     threads:
-      min-spare: 200
-      max: 200
+      min-spare: 300
+      max: 300
 ---
 spring:
   config:
